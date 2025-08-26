@@ -37,13 +37,13 @@ public abstract class Enemy extends Entity <Enemy> {
     public abstract EntityState<Enemy> getDefaultState();   
 
     private void initializeAnimations() {
-        animations = new AnimationHandler[EnemyAnimationType.values().length];
-        AnimationCache cache = AnimationCache.getInstance();
-        
-        for (EnemyAnimationType type : EnemyAnimationType.values()) {
-            animations[type.ordinal()] = cache.getAnimation(type);
-        }
+    animations = new AnimationHandler[EnemyAnimationType.values().length];
+    AnimationCache cache = AnimationCache.getInstance();
+    
+    for (EnemyAnimationType type : EnemyAnimationType.values()) {
+        animations[type.ordinal()] = cache.createAnimation(type);
     }
+}
     
     @Override
 public void update(float delta) {

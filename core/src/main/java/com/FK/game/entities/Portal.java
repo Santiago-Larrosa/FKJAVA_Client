@@ -61,7 +61,7 @@ public class Portal extends Entity <Portal>{
         AnimationCache cache = AnimationCache.getInstance();
         
         for (ObjectsAnimationType type : ObjectsAnimationType.values()) {
-            animations[type.ordinal()] = cache.getAnimation(type);
+            animations[type.ordinal()] = cache.createAnimation(type);
         }
     }
 

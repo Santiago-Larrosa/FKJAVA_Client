@@ -51,7 +51,7 @@ public class Player extends Entity<Player> {
         AnimationCache cache = AnimationCache.getInstance();
         this.animations = new AnimationHandler[PlayerAnimationType.values().length];
         for (PlayerAnimationType type : PlayerAnimationType.values()) {
-            animations[type.ordinal()] = cache.getAnimation(type);
+            animations[type.ordinal()] = cache.createAnimation(type);
         }
 
         this.stateMachine = new EntityStateMachine<>(this, new IdleState());

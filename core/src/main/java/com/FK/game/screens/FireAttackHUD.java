@@ -33,18 +33,20 @@ public class FireAttackHUD {
     private float cooldownTimer = 0f;
 
     public FireAttackHUD() {
-        AnimationCache cache = AnimationCache.getInstance();
-        unloadedAnim = cache.getAnimation(PlayerAnimationType.UNLOADED);
-        loadingAnim = cache.getAnimation(PlayerAnimationType.LOADING);
-        loadedAnim = cache.getAnimation(PlayerAnimationType.LOADED);
-        unloadingAnim = cache.getAnimation(PlayerAnimationType.UNLOADING);
-        
-        if (loadingAnim == null) {
-            Gdx.app.error("FireAttackHUD", "Loading animation is null!");
-        }
-        
-        currentAnim = unloadedAnim;
+    AnimationCache cache = AnimationCache.getInstance();
+
+    // CAMBIO: Se utiliza 'createAnimation' para obtener una instancia nueva para cada animación.
+    unloadedAnim = cache.createAnimation(PlayerAnimationType.UNLOADED);
+    loadingAnim = cache.createAnimation(PlayerAnimationType.LOADING);
+    loadedAnim = cache.createAnimation(PlayerAnimationType.LOADED);
+    unloadingAnim = cache.createAnimation(PlayerAnimationType.UNLOADING);
+    
+    if (loadingAnim == null) {
+        Gdx.app.error("FireAttackHUD", "Loading animation is null!");
     }
+    
+    currentAnim = unloadedAnim;
+}
 
     public void update(float delta) {
         stateTime += delta;

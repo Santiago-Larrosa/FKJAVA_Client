@@ -16,7 +16,7 @@ public enum EnemyAnimationType implements AnimationType{
         {0, 3508, 2480, 1754},
         {2480, 3508, 2480, 1754},
         {0, 5262, 2480, 1754}
-    }, 0.166f),
+    }, 0.083f),
 
     BOLB_LEFT("bolbLEFT.png", new int[][] {
         {0, 0, 2480, 1754},
@@ -26,7 +26,7 @@ public enum EnemyAnimationType implements AnimationType{
         {0, 3508, 2480, 1754},
         {2480, 3508, 2480, 1754},
         {0, 5262, 2480, 1754}
-    }, 0.166f),
+    }, 0.083f),
 
     SLOP("slop.png", new int[][] {
         {0, 0, 2480, 1754},
@@ -39,7 +39,7 @@ public enum EnemyAnimationType implements AnimationType{
         {2480, 5262, 2480, 1754},
         {0, 7016, 2480, 1754},
         {2480, 7016, 2480, 1754}
-    }, 0.166f),
+    }, 0.083f),
 
     SLOP_LEFT("slopLEFT.png", new int[][] {
         {0, 0, 2480, 1754},
@@ -52,7 +52,7 @@ public enum EnemyAnimationType implements AnimationType{
         {2480, 5262, 2480, 1754},
         {0, 7016, 2480, 1754},
         {2480, 7016, 2480, 1754}
-    }, 0.166f),
+    }, 0.083f),
 
     SLOP_ATTACK("SlopAttack.png", new int[][] {
         {0, 0, 1240, 1500},
