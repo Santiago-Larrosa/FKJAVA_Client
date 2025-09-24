@@ -17,14 +17,13 @@ public class EntityStateMachine<T extends Entity> {
         this.currentState.enter(entity);
     }
 
-    public void changeState(EntityState<T> newState) {
-        if (currentState != null) {
-            currentState.exit(entity);
-            previousState = currentState;
-        }
-        currentState = newState;
-        currentState.enter(entity);
+   public void changeState(EntityState<? super T> newState) {
+    if (currentState != null) {
+        currentState.exit(entity);
     }
+    currentState = (EntityState<T>) newState; 
+    currentState.enter(entity);
+}
 
     public void update(float delta) {
         if (currentState != null) {
@@ -52,4 +51,8 @@ public class EntityStateMachine<T extends Entity> {
             changeState(previousState);
         }
     }
+        public boolean isInState(Class<?> stateClass) {
+    return currentState != null && currentState.getClass() == stateClass;
+}
+
 }

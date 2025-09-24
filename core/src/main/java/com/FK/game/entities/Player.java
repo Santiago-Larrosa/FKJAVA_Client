@@ -23,7 +23,6 @@ public class Player extends Entity<Player> {
     private static final float WIDTH = 150;
     private static final float HEIGHT = 110;
     public static final float WALK_SPEED = 500f;
-    public static final float GRAVITY = -600;
     public static final float JUMP_VELOCITY = 10450;
     public static final float FLOOR_Y = 100f; 
     private boolean chargingJump = false;
@@ -40,13 +39,14 @@ public class Player extends Entity<Player> {
     private float fireCooldown = 0f;
     private InputHandler inputHandler;
     private static final float FIRE_ATTACK_COOLDOWN = 5f;
-
     public Player(MainGame game, InputHandler inputHandler) { 
         super(2000, FLOOR_Y, WIDTH, HEIGHT, 100, 100); 
         setHealth(5);
         this.inputHandler = inputHandler; 
         this.game = game;
         setDamage(3);
+        setKnockbackX(300f);
+        setKnockbackY(400f);
         setCollisionBoxOffset(10f, 0f);
         TextureLoader loader = new BasicTextureLoader(); 
         AnimationCache cache = AnimationCache.getInstance();
@@ -95,10 +95,10 @@ public class Player extends Entity<Player> {
         
         float centerTarget = this.getX() + this.getWidth() / 2f;
         float centerSource = source.getX() + source.getWidth() / 2f;
-        float knockbackX = (centerTarget > centerSource) ? KNOCKBACK_FORCE_X : -KNOCKBACK_FORCE_X;
+        float knockbackX = (centerTarget > centerSource) ? knockBackForceX : -knockBackForceX;
         
         this.velocity.x = knockbackX;
-        this.velocity.y = KNOCKBACK_FORCE_Y;
+        this.velocity.y = knockBackForceY;
         
         this.getStateMachine().changeState(new DamageState(source));
     }
@@ -136,12 +136,6 @@ public class Player extends Entity<Player> {
     public MainGame getGame() {
         return game;
     }
-    @Override
-    public float getGravity() {
-        return GRAVITY;
-    }
-
-
 
     @Override
     public void dispose() {

@@ -25,7 +25,6 @@ public class AnimationHandler {
 
     public void update(float delta) {
         stateTime += delta;
-        stateTime %= animationDuration;
     }
 
     public TextureRegion getCurrentFrame() {
@@ -33,9 +32,15 @@ public class AnimationHandler {
         return frames[index];
     }
     public int getCurrentFrameIndex() {
-        if (frameDuration == 0) return 0;
-        return (int)(stateTime / frameDuration) % frames.length;
+    if (frameDuration == 0) return 0;
+    int index = (int)(stateTime / frameDuration);
+    
+    if (index >= frames.length) {
+        return frames.length - 1;
     }
+    return index;
+}
+
     public void reset() {
         stateTime = 0f;
     }
@@ -43,6 +48,12 @@ public class AnimationHandler {
     public float getTotalDuration() {
         return animationDuration;
     }
+
+    public boolean isFinished() {
+        int lastFrameIndex = frames.length - 1;
+    return getCurrentFrameIndex() >= lastFrameIndex;
+    }
+
 
     public void dispose() {
         if (frames.length > 0) {

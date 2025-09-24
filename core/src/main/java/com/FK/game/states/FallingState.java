@@ -40,7 +40,7 @@ public class FallingState implements EntityState<Player> {
         float fixedDelta = Math.min(delta, 1/60f);
 
         if (!isFastFalling) {
-            player.getVelocity().y += Player.GRAVITY * fixedDelta;
+            player.getVelocity().y += player.getGravity() * fixedDelta;
         }
 
         player.getVelocity().y = Math.max(player.getVelocity().y, MAX_FALL_SPEED);

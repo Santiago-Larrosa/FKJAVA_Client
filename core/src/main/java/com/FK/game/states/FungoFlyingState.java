@@ -13,14 +13,13 @@ public class FungoFlyingState implements EntityState<Enemy> {
 
     private final float HORIZONTAL_SPEED = 70f;
     private final float FLAP_FORCE = 200f;
-    private final float GRAVITY = -400f;
     private final float TILT_ANGLE = 15f;
     private final float PLAYER_DETECTION_RANGE_X = 50f;
     private final float ATTACK_DETECTION_WIDTH = 150f;
     private final float ATTACK_DETECTION_HEIGHT = 400f;
     private boolean waitingToTurn = false;
     private float waitTimer = 0f;
-    private final float TURN_DELAY = 0.2f; // Una pequeña pausa antes de girar
+    private final float TURN_DELAY = 0.2f; 
 
     private boolean isMovingRight;
     private int lastFrameIndex = -1;
@@ -43,7 +42,7 @@ public class FungoFlyingState implements EntityState<Enemy> {
             fungo.getVelocity().y = FLAP_FORCE;
         }
         this.lastFrameIndex = currentFrameIndex;
-        fungo.getVelocity().y += GRAVITY * delta;
+        fungo.getVelocity().y += fungo.getGravity() * delta;
         if (waitingToTurn) {
             waitTimer += delta;
             fungo.getVelocity().x = 0;

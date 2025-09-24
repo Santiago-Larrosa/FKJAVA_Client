@@ -124,6 +124,7 @@ public class FallingAttackState implements EntityState<Player> {
     @Override
     public void exit(Player player) {
         player.setDamage(3);
+        SoundCache.getInstance().stopLoop(SoundType.FALLING_ATACK);
         player.setDamageSize(0,0);
     }
 }

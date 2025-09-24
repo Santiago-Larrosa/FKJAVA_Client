@@ -21,6 +21,8 @@ public class Bolb extends Enemy {
         super(0, 0, 250, 300, 100, 150, collisionObjects);
         setCollisionBoxOffset(100f, 0f);
         setDamage(1);
+        setKnockbackX(100f);
+        setKnockbackY(200f);
         setCurrentAnimation(EnemyAnimationType.BOLB);
         this.stateMachine = new EntityStateMachine<>(this, new BolbWalkState());
         spawnOnRandomPlatform();

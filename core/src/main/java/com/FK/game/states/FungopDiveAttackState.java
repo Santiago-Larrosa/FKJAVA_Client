@@ -14,10 +14,9 @@ import com.FK.game.screens.GameScreen;
 
 public class FungopDiveAttackState implements EntityState<Enemy> {
 
-    private final float ATTACK_SPEED = 450f;
+    private final float ATTACK_SPEED = 900f;
     private final float PASS_ANIMATION_DURATION = 0.3f; 
     private final float TILT_ANGLE_FLYING = 15f; 
-
     private Vector2 trajectory = new Vector2();
     private float passTimer = 0f;
     private boolean passAnimationFinished = false;

@@ -25,6 +25,12 @@ import com.FK.game.core.*;
 import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.FK.game.sounds.*;
 import com.FK.game.maps.*;
 import com.FK.game.ui.*;
@@ -59,6 +65,8 @@ public class GameScreen implements Screen {
     private Array<Enemy> enemies; 
     private Array<Entity> entities;
     private Rectangle playerSpawnPoint; 
+    private final Color colorVioletaOscuro = new Color(0.1f, 0.05f, 0.15f, 1f); 
+    private final Color colorLilaClaro = new Color(0.25f, 0.15f, 0.3f, 1f);    
     private Rectangle portalSpawnPoint; 
     private Portal portal;
     private InputHandler player1Controls = new KeyboardInputHandler(
@@ -78,10 +86,19 @@ public class GameScreen implements Screen {
         Input.Keys.L, 
         Input.Keys.DOWN       
     );
-
+    private Texture whitePixelTexture;
+    private TextureRegion whitePixelRegion; 
     private Array<ParticleEffect> activeEffects;
     private ParticleEffect groundImpactEffectTemplate;
     private boolean isFirstRun = true;
+    private enum GameState {
+        RUNNING,
+        PAUSED
+    }
+    private GameState currentState = GameState.RUNNING;
+    private Stage uiStage;
+    private Skin uiSkin;
+    private UpgradeWindow upgradeWindow;
     
 
     public GameScreen(MainGame game) {
@@ -92,6 +109,8 @@ public class GameScreen implements Screen {
     public void show() {
         shapeRenderer = new ShapeRenderer();
         batch = new SpriteBatch();
+        if (isFirstRun) {
+            isFirstRun = false;
         entities = new Array<>();
         enemies = new Array<>();
         activeEffects = new Array<>();
@@ -100,14 +119,20 @@ public class GameScreen implements Screen {
         viewport = new StretchViewport(WORLD_WIDTH * 0.7f, WORLD_HEIGHT * 0.7f, camera);
         viewport.apply();
         camera.position.set(WORLD_WIDTH/2 * 0.7f, WORLD_HEIGHT/2 * 0.7f, 0);
-  
+        whitePixelTexture = new Texture("white_pixel.jpg");
+        whitePixelRegion = new TextureRegion(whitePixelTexture);
         if (!AnimationCache.getInstance().update()) {
             game.setScreen(new LoadingScreen(game));
             return;
         }
         groundImpactEffectTemplate = new ParticleEffect();
         groundImpactEffectTemplate.load(Gdx.files.internal("ground_impact.p"), Gdx.files.internal(""));
-        loadInitialMap();
+        uiSkin = new Skin(Gdx.files.internal("ui/glassy-ui.json"));
+        uiStage = new Stage(new ScreenViewport());
+        loadInitialMap(); // Esto ahora solo se ejecutará una vez.
+        }
+        Gdx.input.setInputProcessor(null);
+        upgradeWindow = new UpgradeWindow(uiSkin, this::closeUpgradeMenu);
     }
 
     private void loadInitialMap() {
@@ -131,8 +156,7 @@ private void checkPortalCollision() {
     if (portal != null && player1 != null) {
         if (player1.getCollisionBox().overlaps(portal.getCollisionBox())) {
             Gdx.app.log("PORTAL", "Jugador 1 entró al portal, iniciando transición...");
-            //game.setScreen(new InterlevelLoadingScreen(game, this));
-            loadRandomGameMap();
+            game.setScreen(new InterlevelLoadingScreen(game, this));
         }
     }
 }
@@ -140,22 +164,18 @@ private void checkPortalCollision() {
 
 public void loadRandomGameMap() {
         FireAttackHUD existingHUD = player1 != null ? player1.getFireAttackHUD() : null;
-        
         cleanUpCurrentMap();
-        
         MapManager mapManager = new MapManager(0.7f);
-        // Ahora solo carga los mapas de las mazmorras
+        
         mapManager.loadMaps(
             "maps/room3.tmx",
-            "maps/room6.tmx"
+            "maps/room6.tmx",
+            "maps/BossHall.tmx"
         );
         mapManager.setRandomMap();
         map = mapManager.getCurrentMap();
         mapRenderer = new OrthogonalTiledMapRenderer(map, mapManager.getScale());
-        
         loadCollisionObjects(mapManager.getScale());
-        
-        // También cargamos la posición del portal del mapa actual
         Array<Rectangle> portalSpawns = loadSpawnPoints("Portal", mapManager.getScale());
         if (portalSpawns.size > 0) {
             this.portalSpawnPoint = portalSpawns.first();
@@ -173,12 +193,26 @@ public void loadRandomGameMap() {
         portal = null;
         portalSpawnPoint = null;
     }
+private void openUpgradeMenu() {
+    currentState = GameState.PAUSED;
+    uiStage.addActor(upgradeWindow);
+    upgradeWindow.centerWindow();
+    Gdx.input.setInputProcessor(uiStage);
+}
 
+    private void closeUpgradeMenu() {
+        currentState = GameState.RUNNING;
+        upgradeWindow.remove(); 
+        Gdx.input.setInputProcessor(null); 
+        Gdx.app.log("GameScreen", "Menú de mejoras CERRADO. Juego reanudado.");
+    }
     private void loadEntities(float scale, FireAttackHUD existingHUD, boolean isSpawnHall) {
         Array<Rectangle> playerSpawns = loadSpawnPoints("Player", scale);
         Array<Rectangle> bolbSpawns = loadSpawnPoints("Bolb", scale);
         Array<Rectangle> slopSpawns = loadSpawnPoints("Slop", scale);
         Array<Rectangle> fungopSpawns = loadSpawnPoints("Fungop", scale);
+        Array<Rectangle> fireSpawns = loadSpawnPoints("Fire", scale);
+        Array<Rectangle> bossSpawns = loadSpawnPoints("Boss", scale);
 
         if (playerSpawns.size > 0) {
             Rectangle spawn = playerSpawns.first();
@@ -227,6 +261,18 @@ public void loadRandomGameMap() {
             enemies.add(fungop);
             entities.add(fungop);
         }
+
+        for (Rectangle spawn : bossSpawns) {
+            Boss boss = new Boss(collisionObjects);
+            boss.setPosition(spawn.x, spawn.y);
+            enemies.add(boss);
+            entities.add(boss);
+        }
+
+        for (Rectangle spawn : fireSpawns) {
+        Fire fire = new Fire(spawn.x, spawn.y);
+        entities.add(fire);
+    }
     }
     private void loadCollisionObjects(float scale) {
         MapLayer collisionLayer = map.getLayers().get("Capa de Objetos 1");
@@ -249,17 +295,21 @@ public void loadRandomGameMap() {
     
 
     private void updateEntities(float delta) {
+        if (currentState == GameState.PAUSED) {
+            return;
+        }
+        
         for (int i = entities.size - 1; i >= 0; i--) {
             Entity e = entities.get(i);
             if (e instanceof Player && ((Player) e).isDead()) {
-            Gdx.app.log("GAME", "El jugador ha muerto. Volviendo al SpawnHall...");
-            // Reiniciamos la pantalla de juego, lo que hará que isFirstRun sea true de nuevo
             game.setScreen(new GameScreen(game));
-            return; // Detenemos la actualización para evitar errores
         }
             
-            if (e instanceof Enemy && ((Enemy) e).isDead()) { 
+            if (e instanceof Entity && ((Entity) e).isReadyForRemoval()) {
                 entities.removeIndex(i);
+                if (e instanceof Enemy) {
+                    enemies.removeValue((Enemy) e, true);
+                }
                 continue;
             }
             
@@ -383,7 +433,11 @@ public void createImpactEffect(float x, float y) {
   @Override
     public void render(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
-            game.setScreen(new UpgradeScreen(game, this));
+            if (currentState == GameState.RUNNING) {
+                openUpgradeMenu();
+            } else {
+                closeUpgradeMenu();
+            }
         }
         if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
             game.setScreen(new MenuScreen(game));
@@ -393,9 +447,13 @@ public void createImpactEffect(float x, float y) {
         updateEntities(delta);
         updateCamera(delta);
         
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        shapeRenderer.setProjectionMatrix(uiStage.getCamera().combined);
+        shapeRenderer.begin(ShapeType.Filled);
+        shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(),
+            colorLilaClaro, colorLilaClaro, colorVioletaOscuro, colorVioletaOscuro);
+        
+        shapeRenderer.end();
         mapRenderer.setView(camera);
         mapRenderer.render();
 
@@ -416,13 +474,47 @@ public void createImpactEffect(float x, float y) {
             }
             fireAttackHUD.render(batch, camera);
         }
+
+        batch.end();
+
+        Gdx.gl.glEnable(GL20.GL_BLEND); 
+        
+        for (Entity e : entities) {
+            if (e instanceof Boss) {
+                Boss boss = (Boss) e;
+                if (boss.getStateMachine().getCurrentState() instanceof BossLaserAttackState) {
+                    BossLaserAttackState state = (BossLaserAttackState) boss.getStateMachine().getCurrentState();
+                    shapeRenderer.setProjectionMatrix(camera.combined);
+                    shapeRenderer.identity();
+                    Vector2 bossCenter = new Vector2(boss.getX() + boss.getWidth()/2, boss.getY() + boss.getHeight()/2);
+                    shapeRenderer.translate(bossCenter.x, bossCenter.y, 0);
+                    shapeRenderer.rotate(0, 0, 1, state.getAttackAngle());
+                    state.renderWarning(shapeRenderer);
+                }
+            }
+        }
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+        
+        batch.begin();
+        for (Entity e : entities) {
+             if (e instanceof Boss) {
+                Boss boss = (Boss) e;
+                if (boss.getStateMachine().getCurrentState() instanceof BossLaserAttackState) {
+                    BossLaserAttackState state = (BossLaserAttackState) boss.getStateMachine().getCurrentState();
+                    state.renderBeam(batch, whitePixelRegion, boss);
+                }
+            }
+        }
         batch.end();
 
         shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.identity();
         for (Entity e: this.entities) {
             e.renderDebug(shapeRenderer);
             e.renderDebugDamage(shapeRenderer);
         }
+        uiStage.act(Math.min(delta, 1 / 30f));
+        uiStage.draw();
         
     }
 
@@ -468,6 +560,7 @@ public void createImpactEffect(float x, float y) {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height);
+        uiStage.getViewport().update(width, height, true);
     }
 
     @Override
@@ -494,5 +587,8 @@ public void createImpactEffect(float x, float y) {
         for (ParticleEffect effect : activeEffects) {
             effect.dispose();
         }
+        uiStage.dispose();
+        whitePixelTexture.dispose();
+        uiSkin.dispose();
     }
 }

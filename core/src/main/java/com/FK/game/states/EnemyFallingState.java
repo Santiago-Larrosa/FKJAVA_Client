@@ -5,8 +5,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.FK.game.entities.*;
 
-public class EnemyFallingState implements EntityState<Enemy> {
-    private static final float MAX_FALL_SPEED = -400f;
+public class EnemyFallingState implements EntityState<Enemy> {  
     private int groundConfirmationCount = 0;
     private static final int REQUIRED_CONFIRMATIONS = 1;
 
@@ -18,7 +17,6 @@ public class EnemyFallingState implements EntityState<Enemy> {
     @Override
     public void update(Enemy enemy, float delta) {
         enemy.getVelocity().y += enemy.getGravity() * delta;
-        enemy.getVelocity().y = Math.max(enemy.getVelocity().y, MAX_FALL_SPEED);
 
         float movementY = enemy.getVelocity().y * delta;
         enemy.getBounds().y += movementY;

@@ -15,15 +15,17 @@ import com.FK.game.states.*;
 public abstract class Entity<T extends Entity<T>> {
     protected Rectangle bounds;
     protected Vector2 velocity;
+    protected boolean readyForRemoval = false;
     protected boolean onGround = true;
     protected boolean onPlatform = false;
+    protected float gravity = -600;
     protected boolean movementLocked = false;
     protected boolean movingRight = true;
     protected Rectangle collisionBox;
     protected float collisionOffsetX = 0;
     protected float collisionOffsetY = 0;
-    protected static final float KNOCKBACK_FORCE_X = 400f;
-    protected static final float KNOCKBACK_FORCE_Y = 300f;
+    protected float knockBackForceX = 0;
+    protected float knockBackForceY = 0;
     protected int health;
     protected float knockbackTimer = 0f;
     protected EntityStateMachine<T> stateMachine;
@@ -123,8 +125,6 @@ public abstract class Entity<T extends Entity<T>> {
         return stateMachine;
     }
 
-    public abstract float getGravity();
-
     public Rectangle getBounds() {
         return bounds;
     }
@@ -136,6 +136,15 @@ public abstract class Entity<T extends Entity<T>> {
     public boolean isOnGround() {
         return onGround;
     }
+
+    public float getGravity() {
+        return gravity;
+    }
+
+    public float setGravity(float gravity) {
+        return this.gravity = gravity;
+    }
+
 
     public void setOnGround(boolean value) {
         onGround = value;
@@ -171,6 +180,22 @@ public abstract class Entity<T extends Entity<T>> {
 
     public Array<Rectangle> getCollisionObjects() {        
         return collisionObjects;
+    }
+
+    public float getKnockbackX () {
+        return this.knockBackForceX;
+    }
+
+    public void setKnockbackX (float forceX) {
+        this.knockBackForceX = forceX;
+    }
+    
+    public float getKnockbackY () {
+        return this.knockBackForceY;
+    }
+
+    public void setKnockbackY (float forceY) {
+        this.knockBackForceY = forceY;
     }
 
     public Rectangle getCollisionBox() {
@@ -269,16 +294,16 @@ public abstract class Entity<T extends Entity<T>> {
         return bounds.height;
     }
 
+    public boolean isReadyForRemoval() {
+        return readyForRemoval;
+    }
+
+    public void setReadyForRemoval(boolean ready) {
+        this.readyForRemoval = ready;
+    }
+
     public Rectangle getDamageBox() {
         return DamageBox;
-    }
-
-    public float getKnockbackX () {
-        return this.KNOCKBACK_FORCE_X;
-    }
-
-    public float getKnockbackY () {
-        return this.KNOCKBACK_FORCE_Y;
     }
 
     public void dispose() {

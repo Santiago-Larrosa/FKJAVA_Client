@@ -11,19 +11,13 @@ import com.FK.game.core.*;
 import com.FK.game.states.*;
 
 public abstract class Enemy extends Entity <Enemy> {
-    protected static final float KNOCKBACK_FORCE_X = 300f;
-    protected static final float KNOCKBACK_FORCE_Y = 500f;
-    
     protected AnimationHandler[] animations;
     protected EnemyAnimationType currentAnimationType;
     protected AnimationHandler currentAnimation;
-    
     protected float speed = 100f;
-    protected float gravity = -900f;
     protected float knockbackTimer = 0f;
     protected boolean canAttack = true;
     protected float attackCooldownTimer = 0f;   
-    
     protected EntityStateMachine<Enemy> stateMachine;
     
     public Enemy(float x, float y, float width, float height, float collisionWidth, float collisionHeight, 
@@ -36,16 +30,16 @@ public abstract class Enemy extends Entity <Enemy> {
 
 
      public void receiveDamage(Entity source) {
+        if (this.stateMachine.isInState(EnemyDeathState.class)) {
+            return;
+        }
         if (stateMachine.getCurrentState() instanceof EnemyDamageState) return;
-        
-        float centerTarget = this.getX() + this.getWidth() / 2f;
-        float centerSource = source.getX() + source.getWidth() / 2f;
-        float knockbackX = (centerTarget > centerSource) ? KNOCKBACK_FORCE_X : -KNOCKBACK_FORCE_X;
-        
-        this.velocity.x = knockbackX;
-        this.velocity.y = KNOCKBACK_FORCE_Y;
+
         
         this.getStateMachine().changeState(new EnemyDamageState(source));
+        if (isDead()) {
+        stateMachine.changeState(new EnemyDeathState());
+    }
      }
 
     public abstract EntityState<Enemy> getDefaultState();   
@@ -94,10 +88,6 @@ public void update(float delta) {
     
     public float getSpeed() {
         return speed;
-    }
-    
-    public float getGravity() {
-        return gravity;
     }
     
     public float getKnockbackTimer() {

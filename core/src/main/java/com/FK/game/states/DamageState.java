@@ -19,21 +19,19 @@ public class DamageState implements EntityState<Player> {
 
     private float knockbackTimer;
     private float damage = 0;
-    private boolean attackerLookRight;
     private float knockbackForceX = 0f;
     private float knockbackForceY = 0f;
 
     public DamageState(Entity entity) {
         this.knockbackTimer = 0.3f;
         this.damage = entity.getDamage();
-        this.attackerLookRight = entity.isMovingRight();
         this.knockbackForceX = entity.getKnockbackX();
         this.knockbackForceY = entity.getKnockbackY();
     }
 
     @Override
     public void enter(Player player) {
-        knockbackForceX = knockbackForceX * (attackerLookRight ? 1f : -1f);
+        knockbackForceX = knockbackForceX * (player.isMovingRight() ? -1f : 1f);
         player.decreaseHealth(this.damage);
         player.getVelocity().x = knockbackForceX;
         player.getVelocity().y = knockbackForceY;
@@ -49,7 +47,7 @@ public class DamageState implements EntityState<Player> {
     @Override
     public void update(Player player, float delta) {
         player.getCurrentAnimation().update(delta);
-        player.getVelocity().y += Player.GRAVITY * delta;
+        player.getVelocity().y += player.getGravity() * delta;
         player.getBounds().x += player.getVelocity().x * delta;
         player.getBounds().y += player.getVelocity().y * delta;
 

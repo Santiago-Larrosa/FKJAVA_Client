@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="50" height="12" tilewidth="182" tileheight="182" infinite="0" nextlayerid="8" nextobjectid="15">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="50" height="12" tilewidth="182" tileheight="182" infinite="0" nextlayerid="9" nextobjectid="16">
  <tileset firstgid="1" source="World2.tsx"/>
  <layer id="1" name="Capa de patrones 1" width="50" height="12">
   <data encoding="csv">
@@ -19,6 +19,11 @@
  </layer>
  <objectgroup id="2" name="Player">
   <object id="14" x="4560" y="1626">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="8" name="Fire">
+  <object id="15" x="6270" y="1620">
    <point/>
   </object>
  </objectgroup>
