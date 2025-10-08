@@ -24,7 +24,9 @@ public class Boss extends Enemy {
         setHealth(50);
         setKnockbackX(100f);
         setKnockbackY(200f);
+        this.coinValue = 100;
         setCurrentAnimation(EnemyAnimationType.BOLB);
+        initStateMachine();
         this.stateMachine = new EntityStateMachine<>(this, new BossIdleState());
         spawnOnRandomPlatform();
     }

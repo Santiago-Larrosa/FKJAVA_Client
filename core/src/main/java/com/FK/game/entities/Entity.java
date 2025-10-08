@@ -104,7 +104,7 @@ public abstract class Entity<T extends Entity<T>> {
         }
     }
 
-    public void receiveDamage(Entity source) {}
+    
 
     public void renderDebug(ShapeRenderer renderer) {
         renderer.setColor(Color.BLUE);
@@ -256,6 +256,7 @@ public abstract class Entity<T extends Entity<T>> {
     }
     public void decreaseHealth (float damage) {
         this.health -= damage;
+         
     }
 
     public int getHealth() {
@@ -305,6 +306,13 @@ public abstract class Entity<T extends Entity<T>> {
     public Rectangle getDamageBox() {
         return DamageBox;
     }
+
+    public Vector2 getCenter() {
+        return new Vector2(
+            bounds.x + bounds.width / 2,
+            bounds.y + bounds.height / 2
+        );
+    }   
 
     public void dispose() {
         for (AnimationHandler animation : animations) {

@@ -18,7 +18,7 @@ import com.FK.game.screens.*;
 import com.FK.game.states.*;
 import com.FK.game.sounds.*;
 
-public class FireAttackHUD {
+public class FireAttackHUD extends BaseHUD{
     private AnimationHandler unloadedAnim;
     private AnimationHandler loadingAnim;
     private AnimationHandler loadedAnim;
@@ -35,7 +35,6 @@ public class FireAttackHUD {
     public FireAttackHUD() {
     AnimationCache cache = AnimationCache.getInstance();
 
-    // CAMBIO: Se utiliza 'createAnimation' para obtener una instancia nueva para cada animación.
     unloadedAnim = cache.createAnimation(PlayerAnimationType.UNLOADED);
     loadingAnim = cache.createAnimation(PlayerAnimationType.LOADING);
     loadedAnim = cache.createAnimation(PlayerAnimationType.LOADED);
@@ -46,6 +45,7 @@ public class FireAttackHUD {
     }
     
     currentAnim = unloadedAnim;
+    this.scale = 0.25f;
 }
 
     public void update(float delta) {
@@ -94,37 +94,18 @@ public class FireAttackHUD {
         return state == HUDState.LOADED;
     }
 
-   public void render(SpriteBatch batch, OrthographicCamera camera) {
-        if (currentAnim == null) {
-            Gdx.app.error("FireAttackHUD", "Current animation is null! State: " + state);
-            return;
-        }
-
+   @Override
+    public void render(SpriteBatch batch, OrthographicCamera camera) {
+        if (currentAnim == null) return;
         TextureRegion frame = currentAnim.getCurrentFrame();
-        if (frame == null) {
-            Gdx.app.error("FireAttackHUD", "Current frame is null! State: " + state + 
-                          ", Animation: " + currentAnim);
-            return;
-        }
+        if (frame == null || frame.getTexture() == null) return;
 
-        if (frame.getTexture() == null) {
-            Gdx.app.error("FireAttackHUD", "Texture is null for frame!");
-            return;
-        }
+        this.width = frame.getRegionWidth() * scale;
+        this.height = frame.getRegionHeight() * scale;
 
-        batch.enableBlending();
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        calculatePosition(camera, 20f, 20f, true, true);
 
-        float scale = 0.25f;
-        float hudWidth = frame.getRegionWidth() * scale;
-        float hudHeight = frame.getRegionHeight() * scale;
-
-        float margin = 20f;
-        float x = camera.position.x + (camera.viewportWidth / 2f) - hudWidth - margin;
-        float y = camera.position.y + (camera.viewportHeight / 2f) - hudHeight - margin;
-
-        batch.setColor(Color.WHITE);
-        batch.draw(frame, x, y, hudWidth, hudHeight);
+        batch.draw(frame, this.x, this.y, this.width, this.height);
     }
     public void resetCooldown() {
         changeState(HUDState.TRANSITION_TO_UNLOADED, unloadingAnim);

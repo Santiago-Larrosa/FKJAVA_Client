@@ -10,15 +10,15 @@ import com.FK.game.animations.*;
 import com.FK.game.core.*;
 import com.FK.game.states.*;
 
-public abstract class Enemy extends Entity <Enemy> {
+public abstract class Enemy extends CharacterEntity<Enemy> {
     protected AnimationHandler[] animations;
     protected EnemyAnimationType currentAnimationType;
     protected AnimationHandler currentAnimation;
     protected float speed = 100f;
     protected float knockbackTimer = 0f;
+    protected int coinValue = 1;
     protected boolean canAttack = true;
     protected float attackCooldownTimer = 0f;   
-    protected EntityStateMachine<Enemy> stateMachine;
     
     public Enemy(float x, float y, float width, float height, float collisionWidth, float collisionHeight, 
                 Array<Rectangle> collisionObjects) {
@@ -28,7 +28,7 @@ public abstract class Enemy extends Entity <Enemy> {
         initializeAnimations();
     }
 
-
+/*
      public void receiveDamage(Entity source) {
         if (this.stateMachine.isInState(EnemyDeathState.class)) {
             return;
@@ -40,9 +40,11 @@ public abstract class Enemy extends Entity <Enemy> {
         if (isDead()) {
         stateMachine.changeState(new EnemyDeathState());
     }
-     }
-
-    public abstract EntityState<Enemy> getDefaultState();   
+     }*/
+@Override
+public AnimationType getDeathAnimationType() {
+    return EnemyAnimationType.SMOKE; // O la animación de muerte del enemigo
+}
 
     private void initializeAnimations() {
     animations = new AnimationHandler[EnemyAnimationType.values().length];
@@ -66,18 +68,25 @@ public void update(float delta) {
     
     protected abstract EnemyDamageState createDamageState(Entity source);
     
-    public void setCurrentAnimation(EnemyAnimationType type) {
-        if (type == null || animations == null || type.ordinal() >= animations.length) return;
-        
-        AnimationHandler newAnimation = animations[type.ordinal()];
-        if (newAnimation != null && newAnimation != currentAnimation) {
-            currentAnimationType = type;
-            currentAnimation = newAnimation;
-            currentAnimation.reset();
-        }
+
+    @Override
+    public EntityState<Enemy> getDefaultState() {
+        return new BolbWalkState();
     }
-    
-  
+
+  @Override
+public void setCurrentAnimation(AnimationType animType) {
+     EnemyAnimationType type = (EnemyAnimationType) animType;
+    if (type == null || type.ordinal() >= animations.length) {
+            throw new IllegalArgumentException("Tipo de animación inválido");
+        }
+        this.currentAnimation = animations[type.ordinal()];
+        if (currentAnimation == null) {
+            throw new IllegalStateException("Animación no cargada para: " + type);
+        }
+
+}
+
     public AnimationHandler getCurrentAnimation() {
         return currentAnimation;
     }
@@ -189,6 +198,11 @@ protected void spawnOnRandomPlatform() {
         Gdx.app.log("DEBUG", "No se encontró plataforma adecuada para spawn");
     }
 }
+
+public int getCoinValue() {
+        return coinValue;
+    }
+    
 @Override
     public String toString() {
         return "Enemy";

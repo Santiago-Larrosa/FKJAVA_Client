@@ -8,6 +8,7 @@ import com.FK.game.animations.EnemyAnimationType;
 import com.FK.game.core.GameContext;
 import com.FK.game.entities.Enemy;
 import com.FK.game.entities.Player;
+import com.FK.game.sounds.*;
 
 public class FungoFlyingState implements EntityState<Enemy> {
 
@@ -27,6 +28,7 @@ public class FungoFlyingState implements EntityState<Enemy> {
     @Override
     public void enter(Enemy fungo) {
         fungo.setCurrentAnimation(EnemyAnimationType.FUNGOP);
+        SoundCache.getInstance().startSpatialLoop(SoundType.FLAP, fungo);
         this.isMovingRight = true;
         fungo.getVelocity().x = HORIZONTAL_SPEED;
         this.lastFrameIndex = -1;
@@ -38,11 +40,12 @@ public class FungoFlyingState implements EntityState<Enemy> {
     public void update(Enemy fungo, float delta) {
         AnimationHandler animation = fungo.getCurrentAnimation();
         int currentFrameIndex = animation.getCurrentFrameIndex();
+        fungo.getVelocity().y += fungo.getGravity() * delta;
         if (currentFrameIndex < lastFrameIndex) {
-            fungo.getVelocity().y = FLAP_FORCE;
+            fungo.getVelocity().y += FLAP_FORCE;
         }
         this.lastFrameIndex = currentFrameIndex;
-        fungo.getVelocity().y += fungo.getGravity() * delta;
+        
         if (waitingToTurn) {
             waitTimer += delta;
             fungo.getVelocity().x = 0;
@@ -82,6 +85,8 @@ public class FungoFlyingState implements EntityState<Enemy> {
                    fungo.getWidth(), fungo.getHeight(), 1f, 1f, rotation);
     }
     
-    @Override public void exit(Enemy fungo) {}
+    @Override public void exit(Enemy fungo) {
+        SoundCache.getInstance().stopSpatialLoop(SoundType.FLAP);
+    }
     @Override public void handleInput(Enemy entity) {}
 }

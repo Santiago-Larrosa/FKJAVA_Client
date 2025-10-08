@@ -93,7 +93,6 @@ public class FallingAttackState implements EntityState<Player> {
                 player.getBounds().x = nextX;
                 player.getBounds().y = nextY;
 
-                // CAMBIO: Usamos el handler abstracto para comprobar si se soltó la tecla
                 if (!input.isAttackPressed()) { 
                     player.getVelocity().set(0, 0);
                     SoundCache.getInstance().stopLoop(SoundType.FALLING_ATACK);

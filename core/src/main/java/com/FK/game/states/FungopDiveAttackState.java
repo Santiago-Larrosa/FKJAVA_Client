@@ -1,4 +1,4 @@
-// En el archivo FungopDiveAttackState.java
+
 
 package com.FK.game.states;
 

@@ -116,15 +116,12 @@ public class FallingState implements EntityState<Player> {
 
     @Override
     public void handleInput(Player player) {
-        // CAMBIO: Obtenemos el handler del jugador
         InputHandler input = player.getInputHandler();
 
-        // CAMBIO: Usamos el handler abstracto para el ataque
         if (input.isAttackJustPressed()) {
             player.getStateMachine().changeState(new FallingAttackState());
         }
         
-        // CAMBIO: Usamos el handler abstracto para la caída rápida
         if (input.isMoveDownJustPressed() && !isFastFalling) {
             isFastFalling = true;
             player.getVelocity().y = MAX_FALL_SPEED;

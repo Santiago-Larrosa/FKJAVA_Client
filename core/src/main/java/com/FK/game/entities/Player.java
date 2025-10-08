@@ -18,13 +18,15 @@ import com.FK.game.screens.*;
 import com.FK.game.states.*;
 
 
-public class Player extends Entity<Player> {
+public class Player extends CharacterEntity<Player> {
 
     private static final float WIDTH = 150;
     private static final float HEIGHT = 110;
     public static final float WALK_SPEED = 500f;
     public static final float JUMP_VELOCITY = 10450;
     public static final float FLOOR_Y = 100f; 
+    public float damageAmplifier = 1.0f;
+    private float maxHealth = 5f;
     private boolean chargingJump = false;
     private final Texture texture = Assets.playerIdle;
     private final Texture pass = Assets.playerPass;
@@ -39,10 +41,14 @@ public class Player extends Entity<Player> {
     private float fireCooldown = 0f;
     private InputHandler inputHandler;
     private static final float FIRE_ATTACK_COOLDOWN = 5f;
-    public Player(MainGame game, InputHandler inputHandler) { 
+    private final PlayerData playerData;
+
+
+    public Player(MainGame game, InputHandler inputHandler, PlayerData playerData) { 
         super(2000, FLOOR_Y, WIDTH, HEIGHT, 100, 100); 
         setHealth(5);
         this.inputHandler = inputHandler; 
+        this.playerData = playerData;  
         this.game = game;
         setDamage(3);
         setKnockbackX(300f);
@@ -58,6 +64,7 @@ public class Player extends Entity<Player> {
         this.stateMachine = new EntityStateMachine<>(this, new IdleState());
         this.currentState = new IdleState();
         this.currentState.enter(this);
+        applyPlayerData();
     }
 
    
@@ -69,6 +76,10 @@ public class Player extends Entity<Player> {
         super.update(delta); 
         debugPlatformDetection();
     }
+@Override
+public AnimationType getDeathAnimationType() {
+    return PlayerAnimationType.SMOKE;
+}
 
 
     public void render(Batch batch) {
@@ -89,19 +100,7 @@ public class Player extends Entity<Player> {
         return stateMachine;
     }
 
-    @Override
-    public void receiveDamage(Entity source) {
-        if (stateMachine.getCurrentState() instanceof DamageState) return;
-        
-        float centerTarget = this.getX() + this.getWidth() / 2f;
-        float centerSource = source.getX() + source.getWidth() / 2f;
-        float knockbackX = (centerTarget > centerSource) ? knockBackForceX : -knockBackForceX;
-        
-        this.velocity.x = knockbackX;
-        this.velocity.y = knockBackForceY;
-        
-        this.getStateMachine().changeState(new DamageState(source));
-    }
+ 
 
 
 
@@ -109,7 +108,10 @@ public class Player extends Entity<Player> {
         return this.fireAttackHUD.isAttackReady();
     }
     
-   
+   @Override
+    public EntityState<Player> getDefaultState() {
+        return new IdleState();
+    }
 
     public void startFireAttackCooldown() {
         this.fireCooldown = FIRE_ATTACK_COOLDOWN;
@@ -121,7 +123,9 @@ public class Player extends Entity<Player> {
         return currentType;
     }
 
-    public void setCurrentAnimation(PlayerAnimationType type) {
+    @Override
+public void setCurrentAnimation(AnimationType animType) {
+        PlayerAnimationType type = (PlayerAnimationType) animType;
         if (type == null || type.ordinal() >= animations.length) {
             throw new IllegalArgumentException("Tipo de animación inválido");
         }
@@ -176,8 +180,35 @@ public class Player extends Entity<Player> {
         return fireAttackHUD;
     }
 
+    @Override
+    public void setDamage (float newDamage) {
+        this.damage = newDamage * this.damageAmplifier;
+    }
+
     @Override 
     public String toString () {
         return "Player";
     }
+
+
+    public void applyPlayerData() {
+        this.maxHealth = playerData.getMaxHealth();
+        this.health = playerData.currentHealth;
+        this.damage = playerData.getAttackDamage();
+    }
+
+    public void updatePlayerData() {
+        playerData.currentHealth = this.health;
+    }
+
+    public void addCoins(int amount) {
+        playerData.coinCount += amount;
+    }
+
+
+
+    public int getCoinCount() {
+        return playerData.coinCount;
+    }
+
 }

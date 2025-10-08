@@ -1,69 +1,70 @@
 package com.FK.game.states;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.FK.game.animations.*;
 import com.FK.game.core.*;
 import com.FK.game.entities.*;
-import com.FK.game.screens.*;
-import com.FK.game.states.*;
-import com.FK.game.sounds.*;
 
+public class DamageState implements EntityState<CharacterEntity> {
 
-public class DamageState implements EntityState<Player> {
+    private float knockbackTimer = 0.2f;
 
-    private float knockbackTimer;
-    private float damage = 0;
-    private float knockbackForceX = 0f;
-    private float knockbackForceY = 0f;
+    @Override
+    public void enter(CharacterEntity character) {
+        Gdx.app.log("DAMAGE_STATE", character + " entra en DamageState");
+        Gdx.app.log("DAMAGE_STATE", "Velocidad antes del knockback: " + character.getVelocity());
+        Gdx.app.log("DAMAGE_STATE", "Último knockback recibido: " + character.getLastKnockback());
 
-    public DamageState(Entity entity) {
-        this.knockbackTimer = 0.3f;
-        this.damage = entity.getDamage();
-        this.knockbackForceX = entity.getKnockbackX();
-        this.knockbackForceY = entity.getKnockbackY();
+        character.getVelocity().set(character.getLastKnockback());
+        this.knockbackTimer = 0.2f;
+
+        Gdx.app.log("DAMAGE_STATE", "Velocidad aplicada: " + character.getVelocity());
+        Gdx.app.log("DAMAGE_STATE", "Vida actual: " + character.getHealth());
     }
 
     @Override
-    public void enter(Player player) {
-        knockbackForceX = knockbackForceX * (player.isMovingRight() ? -1f : 1f);
-        player.decreaseHealth(this.damage);
-        player.getVelocity().x = knockbackForceX;
-        player.getVelocity().y = knockbackForceY;
-
-        player.setCurrentAnimation(knockbackForceX > 0 ?
-            PlayerAnimationType.JUMPING_RIGHT : PlayerAnimationType.JUMPING_LEFT);
-    }
-
-    @Override
-    public void handleInput(Player player) {
-    }
-
-    @Override
-    public void update(Player player, float delta) {
-        player.getCurrentAnimation().update(delta);
-        player.getVelocity().y += player.getGravity() * delta;
-        player.getBounds().x += player.getVelocity().x * delta;
-        player.getBounds().y += player.getVelocity().y * delta;
-
+    public void update(CharacterEntity character, float delta) {
         knockbackTimer -= delta;
+        Gdx.app.log("DAMAGE_STATE", character + " actualizando DamageState | knockbackTimer=" + knockbackTimer);
 
-        if (player.isOnPlataform() && knockbackTimer <= 0) {
-            player.getStateMachine().changeState(new IdleState());
+        if (!character.isOnPlataform()) {
+            character.getVelocity().y += character.getGravity() * delta;
+            Gdx.app.log("DAMAGE_STATE", "Aplicando gravedad. Nueva velocidad Y: " + character.getVelocity().y);
+        }
+
+        character.getBounds().x += character.getVelocity().x * delta;
+        character.getBounds().y += character.getVelocity().y * delta;
+
+        if (knockbackTimer <= 0f && character.isOnPlataform()) {
+            Gdx.app.log("DAMAGE_STATE", character + " termina daño, cambiando a estado por defecto");
+            character.getStateMachine().changeState(character.getDefaultState());
         }
     }
 
     @Override
-    public void render(Player player, Batch batch) {
+    public void render(CharacterEntity character, Batch batch) {
+        TextureRegion frame = character.getCurrentAnimation().getCurrentFrame();
+        if (frame == null) {
+            Gdx.app.log("DAMAGE_STATE", "⚠ " + character + " no tiene frame actual");
+            return;
+        }
 
+        batch.draw(frame, 
+                   character.getX(), 
+                   character.getY(), 
+                   character.getWidth(), 
+                   character.getHeight());
+
+        Gdx.app.log("DAMAGE_STATE", "Renderizando frame de " + character + " en (" + character.getX() + ", " + character.getY() + ")");
     }
 
     @Override
-    public void exit(Player player) {
+    public void exit(CharacterEntity character) {
+        Gdx.app.log("DAMAGE_STATE", character + " sale de DamageState");
     }
+
+    @Override
+    public void handleInput(CharacterEntity character) { }
 }

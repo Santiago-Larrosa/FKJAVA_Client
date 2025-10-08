@@ -21,10 +21,13 @@ public class Slop extends Enemy {
         super(0, 0, 106, 75, 106, 75, collisionObjects);
         setCollisionBoxOffset(0f, 0f);
         setCurrentAnimation(EnemyAnimationType.SLOP);
+        this.maxHealth = 3; 
+        this.health = this.maxHealth; 
         setKnockbackX(100f);
         setKnockbackY(200f);
         setDamage(1);
-        this.stateMachine = new EntityStateMachine<>(this, new SlopWalkState());
+        this.coinValue = 3;
+        initStateMachine();
         spawnOnRandomPlatform();
     }
     

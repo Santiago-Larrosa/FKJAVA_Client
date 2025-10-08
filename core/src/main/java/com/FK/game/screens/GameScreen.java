@@ -34,6 +34,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.FK.game.sounds.*;
 import com.FK.game.maps.*;
 import com.FK.game.ui.*;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 
 public class GameScreen implements Screen {
@@ -43,7 +44,9 @@ public class GameScreen implements Screen {
     private SpriteBatch batch;
     private Player player1;
     private Player player2;
-    private FireAttackHUD fireAttackHUD;
+    private Array<BaseHUD> hudElements;
+    private BitmapFont hudFont;
+    private Texture coinTexture;
     private boolean isCameraMoving = false;
     private float cameraMoveStartX, cameraMoveStartY;
     private float cameraMoveTargetX, cameraMoveTargetY;
@@ -100,7 +103,7 @@ public class GameScreen implements Screen {
     private Skin uiSkin;
     private UpgradeWindow upgradeWindow;
     
-
+    private UpgradeManager upgradeManager;
     public GameScreen(MainGame game) {
         this.game = game;
     }
@@ -108,6 +111,7 @@ public class GameScreen implements Screen {
   @Override
     public void show() {
         shapeRenderer = new ShapeRenderer();
+        upgradeManager = new UpgradeManager();
         batch = new SpriteBatch();
         if (isFirstRun) {
             isFirstRun = false;
@@ -129,10 +133,11 @@ public class GameScreen implements Screen {
         groundImpactEffectTemplate.load(Gdx.files.internal("ground_impact.p"), Gdx.files.internal(""));
         uiSkin = new Skin(Gdx.files.internal("ui/glassy-ui.json"));
         uiStage = new Stage(new ScreenViewport());
-        loadInitialMap(); // Esto ahora solo se ejecutará una vez.
+        hudFont = new BitmapFont();
+            coinTexture = new Texture("coin.png");
+        loadInitialMap(); 
         }
         Gdx.input.setInputProcessor(null);
-        upgradeWindow = new UpgradeWindow(uiSkin, this::closeUpgradeMenu);
     }
 
     private void loadInitialMap() {
@@ -153,9 +158,11 @@ public class GameScreen implements Screen {
     }
 
 private void checkPortalCollision() {
-    if (portal != null && player1 != null) {
+    if (portal != null && player1 != null && !player1.isDead()) {
         if (player1.getCollisionBox().overlaps(portal.getCollisionBox())) {
-            Gdx.app.log("PORTAL", "Jugador 1 entró al portal, iniciando transición...");
+            player1.updatePlayerData();
+            if (player2 != null) player2.updatePlayerData();
+            
             game.setScreen(new InterlevelLoadingScreen(game, this));
         }
     }
@@ -169,8 +176,8 @@ public void loadRandomGameMap() {
         
         mapManager.loadMaps(
             "maps/room3.tmx",
-            "maps/room6.tmx",
-            "maps/BossHall.tmx"
+            "maps/room6.tmx"
+           // "maps/BossHall.tmx"
         );
         mapManager.setRandomMap();
         map = mapManager.getCurrentMap();
@@ -194,11 +201,15 @@ public void loadRandomGameMap() {
         portalSpawnPoint = null;
     }
 private void openUpgradeMenu() {
-    currentState = GameState.PAUSED;
-    uiStage.addActor(upgradeWindow);
-    upgradeWindow.centerWindow();
-    Gdx.input.setInputProcessor(uiStage);
-}
+        if (player1 != null) {
+        player1.getStateMachine().changeState(new IdleState());
+    }
+
+        upgradeWindow = new UpgradeWindow(uiSkin, this::closeUpgradeMenu, game.playerData, upgradeManager);
+        uiStage.addActor(upgradeWindow);
+        upgradeWindow.centerWindow();
+        Gdx.input.setInputProcessor(uiStage);
+    }
 
     private void closeUpgradeMenu() {
         currentState = GameState.RUNNING;
@@ -218,27 +229,29 @@ private void openUpgradeMenu() {
             Rectangle spawn = playerSpawns.first();
             playerSpawnPoint = spawn;
             
-            player1 = new Player(game, player1Controls);
+            player1 = new Player(game, player1Controls, game.playerData);
             player1.setCurrentAnimation(PlayerAnimationType.IDLE_RIGHT);
             player1.setPosition(spawn.x, spawn.y);
             player1.setCollisionObjects(collisionObjects);
-            
-            if (existingHUD != null) {
-                player1.setFireAttackHUD(existingHUD);
-            } else {
-                fireAttackHUD = new FireAttackHUD();
-                player1.setFireAttackHUD(fireAttackHUD);
-            }
+            hudElements = new Array<>();
+
             
             entities.add(player1);
             GameContext.setPlayer(player1);
 
-            player2 = new Player(game, player2Controls);
+            player2 = new Player(game, player2Controls, game.playerData2);
             player2.setCurrentAnimation(PlayerAnimationType.IDLE_LEFT); 
             player2.setPosition(spawn.x, spawn.y); 
             player2.setCollisionObjects(collisionObjects);
-            player2.setFireAttackHUD(fireAttackHUD);
             entities.add(player2);
+
+            FireAttackHUD fireHUD = new FireAttackHUD();
+            player1.setFireAttackHUD(fireHUD); 
+            player2.setFireAttackHUD(fireHUD); 
+            hudElements.add(fireHUD);
+
+            CoinHUD coinHUD1 = new CoinHUD(game.playerData, coinTexture, hudFont);
+            hudElements.add(coinHUD1);
         }
 
         for (Rectangle spawn : bolbSpawns) {
@@ -298,20 +311,37 @@ private void openUpgradeMenu() {
         if (currentState == GameState.PAUSED) {
             return;
         }
-        
+        SoundCache.getInstance().updateSpatialLoops(player1);
         for (int i = entities.size - 1; i >= 0; i--) {
             Entity e = entities.get(i);
-            if (e instanceof Player && ((Player) e).isDead()) {
-            game.setScreen(new GameScreen(game));
-        }
+            if (e instanceof CharacterEntity<?>) {
+    ((CharacterEntity<?>) e).updateDamageCooldown(Gdx.graphics.getDeltaTime());
+}
+
+            
             
             if (e instanceof Entity && ((Entity) e).isReadyForRemoval()) {
+                if (e == player1) {
+        game.playerData.resetOnDeath();
+            game.setScreen(new GameScreen(game));
+    }
+                
                 entities.removeIndex(i);
                 if (e instanceof Enemy) {
+                    
+                    Enemy en = (Enemy) e;
+                    Rectangle spawnArea = en.getCollisionBox();
+                    for (int j = 0; j < en.getCoinValue(); j++) {
+                        float spawnX = MathUtils.random(spawnArea.x, spawnArea.x + spawnArea.width);
+                        float spawnY = MathUtils.random(spawnArea.y, spawnArea.y + spawnArea.height);
+                        Coin coin = new Coin(spawnX, spawnY);
+                        entities.add(coin);
+                    }
                     enemies.removeValue((Enemy) e, true);
                 }
                 continue;
             }
+            
             
             float oldX = e.getX();
             float oldY = e.getY();
@@ -326,6 +356,7 @@ private void openUpgradeMenu() {
             Rectangle bounds = e.getCollisionBox();
             boolean collisionX = false;
             boolean collisionY = false;
+            if (!(e instanceof Coin)){
 
             for (Rectangle rect : collisionObjects) {
                 if (bounds.overlaps(rect)) {
@@ -343,7 +374,7 @@ private void openUpgradeMenu() {
                     else collisionY = true;
                 }
             }
-
+        }
         if (collisionX) {
             e.setPosition(oldX, e.getY());
             e.setHasWallAhead(true);
@@ -368,9 +399,36 @@ private void openUpgradeMenu() {
     
     e.setOnPlatform(landedOnPlatform);
         }
+
+        
+    for (Entity entity : entities) {
+    if (entity instanceof Coin) {
+        Coin coin = (Coin) entity;
+
+        if (coin.getTarget() == null) {
+            Vector2 coinCenter = coin.getCenter();
+            
+            float distP1 = (player1 != null && !player1.isDead()) 
+                ? player1.getCenter().dst(coinCenter) 
+                : Float.MAX_VALUE;
+            
+            float distP2 = (player2 != null && !player2.isDead()) 
+                ? player2.getCenter().dst(coinCenter) 
+                : Float.MAX_VALUE;
+
+            if (distP1 <= distP2) {
+                coin.setTarget(player1);
+            } else{
+                coin.setTarget(player2);
+            }
+        }
+    }
+}
         
         checkEntityDamage();
-        fireAttackHUD.update(delta);
+        for (BaseHUD hud : hudElements) {
+            hud.update(delta);
+        }
         if (enemies.isEmpty() && portal == null && portalSpawnPoint != null) {
             portal = new Portal(portalSpawnPoint.x, portalSpawnPoint.y);
             entities.add(portal);
@@ -394,12 +452,17 @@ private void openUpgradeMenu() {
                 Entity target = entities.get(j);
 
                 if (damageBox.overlaps(target.getCollisionBox())) {                    
-                    target.receiveDamage(attacker);
+                    if (attacker instanceof Player && target instanceof Fire ) {
+                        openUpgradeMenu();
+                    } else {
+                        if (target instanceof CharacterEntity) {
+                             ((CharacterEntity) target).receiveDamage(attacker);
+                        }
+                    }
                 }
             }
         }
     }
-
 
     private Array<Rectangle> loadSpawnPoints(String layerName, float scale) {
     Array<Rectangle> spawnPoints = new Array<>();
@@ -472,7 +535,9 @@ public void createImpactEffect(float x, float y) {
                     activeEffects.removeIndex(i);
                 }
             }
-            fireAttackHUD.render(batch, camera);
+            for (BaseHUD hud : hudElements) {
+                hud.render(batch, camera);
+            }
         }
 
         batch.end();
@@ -518,10 +583,7 @@ public void createImpactEffect(float x, float y) {
         
     }
 
-    public FireAttackHUD getFireAttackHUD() {
-        return fireAttackHUD;
-    }
-
+ 
     
 
         
@@ -587,6 +649,8 @@ public void createImpactEffect(float x, float y) {
         for (ParticleEffect effect : activeEffects) {
             effect.dispose();
         }
+        hudFont.dispose();
+        coinTexture.dispose();
         uiStage.dispose();
         whitePixelTexture.dispose();
         uiSkin.dispose();

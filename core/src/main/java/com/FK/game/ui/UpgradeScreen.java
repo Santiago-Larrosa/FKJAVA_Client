@@ -1,4 +1,4 @@
-// Crea un nuevo archivo: UpgradeScreen.java
+
 package com.FK.game.ui;
 
 import com.badlogic.gdx.Gdx;

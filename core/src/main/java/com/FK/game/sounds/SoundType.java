@@ -10,7 +10,8 @@ public enum SoundType {
     SWORD("sword.wav"),
     FALLING_ATACK("FallingAttackSound.wav"),
     FALLING_CLASH("fallingClash.wav"),
-    FIRE("fire.wav");
+    FIRE("fire.wav"),
+    FLAP("flap.wav");
 
     private final String path;
 

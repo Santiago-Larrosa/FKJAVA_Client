@@ -6,7 +6,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Rectangle;
 import com.FK.game.animations.*;
-import com.FK.game.core.*; // Asegúrate de importar InputHandler
+import com.FK.game.core.*; 
 import com.FK.game.entities.*;
 
 public class JumpingState implements EntityState<Player> {
@@ -52,7 +52,6 @@ public class JumpingState implements EntityState<Player> {
     }
 
     private boolean checkCeilingCollision(Player player) {
-        // ... (Este método no tiene inputs, no necesita cambios)
         Rectangle collisionBox = player.getCollisionBox();
         Rectangle ceilingSensor = new Rectangle(
             collisionBox.x + collisionBox.width * 0.2f,
@@ -71,15 +70,10 @@ public class JumpingState implements EntityState<Player> {
 
     @Override
     public void handleInput(Player player) {
-        // CAMBIO: Obtenemos el handler del jugador.
         InputHandler input = player.getInputHandler();
-
-        // CAMBIO: Usamos el handler abstracto para el ataque.
         if (input.isAttackJustPressed()) {
             player.getStateMachine().changeState(new FallingAttackState());
         }
-
-        // CAMBIO: Usamos el handler abstracto para actualizar la dirección del sprite.
         if (input.isMoveLeftPressed()) {
             player.setMovingRight(false);
         } else if (input.isMoveRightPressed()) {
@@ -89,7 +83,6 @@ public class JumpingState implements EntityState<Player> {
 
     @Override
     public void render(Player player, Batch batch) {
-        // ... (Este método no tiene inputs, no necesita cambios)
         TextureRegion frame = player.getCurrentAnimation().getCurrentFrame();
         float scale = 1.0f + (float)Math.sin(airTime * 10) * 0.05f;
         batch.draw(frame,
@@ -106,6 +99,5 @@ public class JumpingState implements EntityState<Player> {
 
     @Override
     public void exit(Player player) {
-        // No hay nada que cambiar aquí.
     }
 }

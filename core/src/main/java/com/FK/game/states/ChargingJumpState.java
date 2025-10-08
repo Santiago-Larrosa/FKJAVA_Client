@@ -27,7 +27,6 @@ public class ChargingJumpState implements EntityState<Player> {
 
     @Override
     public void update(Player player, float delta) {
-        // CAMBIO: Obtenemos el handler del jugador
         InputHandler input = player.getInputHandler();
 
         chargeTime = Math.min(chargeTime + delta, MAX_CHARGE_TIME);
@@ -35,7 +34,6 @@ public class ChargingJumpState implements EntityState<Player> {
         player.getCurrentAnimation().update(delta);
         SoundCache.getInstance().stopLoop(SoundType.WALK);
         
-        // CAMBIO: Usamos el handler abstracto para comprobar si se soltó la tecla de salto
         if (!input.isJumpPressed()) {
             float jumpForce = MIN_JUMP_FORCE + 
                             (MAX_JUMP_FORCE - MIN_JUMP_FORCE) * (chargeTime / MAX_CHARGE_TIME);
@@ -48,10 +46,8 @@ public class ChargingJumpState implements EntityState<Player> {
 
     @Override
     public void handleInput(Player player) {
-        // CAMBIO: Obtenemos el handler del jugador
         InputHandler input = player.getInputHandler();
-        
-        // CAMBIO: Usamos el handler abstracto para actualizar la dirección
+    
         if (input.isMoveLeftPressed()) {
             player.setMovingRight(false);
         } else if (input.isMoveRightPressed()) {

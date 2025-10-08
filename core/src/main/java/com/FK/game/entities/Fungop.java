@@ -16,11 +16,14 @@ public class Fungop extends Enemy {
         setDamage(2);
         setKnockbackX(200f);
         setKnockbackY(400f);
+        this.maxHealth = 10; 
+        this.health = this.maxHealth; 
         this.attackCooldownTimer = 5f; 
         this.setCanAttack(true);
+        this.coinValue = 10;
         setCurrentAnimation(EnemyAnimationType.FUNGOP);
-        this.stateMachine = new EntityStateMachine<>(this, new FungoFlyingState());
-        setGravity(-400f);
+        initStateMachine();
+        setGravity(-250f);
     }
     
     

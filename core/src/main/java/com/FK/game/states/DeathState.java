@@ -1,38 +1,47 @@
 package com.FK.game.states;
 
 import com.FK.game.animations.PlayerAnimationType; 
-import com.FK.game.entities.Player;
+import com.FK.game.entities.CharacterEntity;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.FK.game.animations.AnimationHandler;
+import com.badlogic.gdx.Gdx;
 
-public class DeathState implements EntityState<Player> {
-
-    @Override
-    public void enter(Player player) {
-        player.getVelocity().set(0, 0);
-        player.setCurrentAnimation(PlayerAnimationType.SMOKE); 
-        player.getCurrentAnimation().reset();
-    }
+public class DeathState implements EntityState<CharacterEntity> {
 
     @Override
-    public void update(Player player, float delta) {
-        player.getCurrentAnimation().update(delta);
+    public void enter(CharacterEntity character) {
 
-        if (player.getCurrentAnimation().isFinished()) {
-            player.setReadyForRemoval(true);
+        character.getVelocity().set(0, 0);
+        character.setCurrentAnimation(character.getDeathAnimationType());
+        if (character.getCurrentAnimation() != null) {
+            character.getCurrentAnimation().reset();
         }
     }
 
     @Override
-    public void render(Player player, Batch batch) {
-        TextureRegion frame = player.getCurrentAnimation().getCurrentFrame();
-        batch.draw(frame, 
-                   player.getX(), 
-                   player.getY(), 
-                   player.getWidth(), 
-                   player.getHeight());
+    public void update(CharacterEntity character, float delta) {
+     character.getCurrentAnimation().update(delta);
+     Gdx.app.log("DeathState", character + " stateTime=" + character.getCurrentAnimation().getCurrentFrameIndex() + 
+             " finished=" + character.getCurrentAnimation().isFinished());
+
+
+        if (character.getCurrentAnimation().isFinished()) {
+            Gdx.app.log("YA SE PUEDE MORIR", "El enemigo ya se puede morir");
+            character.setReadyForRemoval(true);
+        }
     }
 
-    @Override public void exit(Player player) {}
-    @Override public void handleInput(Player player) {}
+    @Override
+    public void render(CharacterEntity character, Batch batch) {
+        TextureRegion frame = character.getCurrentAnimation().getCurrentFrame();
+        batch.draw(frame, 
+                   character.getX(), 
+                   character.getY(), 
+                   character.getWidth(), 
+                   character.getHeight());
+    }
+
+    @Override public void exit(CharacterEntity character) {}
+    @Override public void handleInput(CharacterEntity character) {}
 }
