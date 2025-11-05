@@ -11,6 +11,7 @@ import com.FK.game.core.GameContext;
 import com.FK.game.entities.Enemy;
 import com.FK.game.entities.Player;
 import com.FK.game.screens.GameScreen;
+import com.FK.game.network.StateMessage;
 
 public class FungopDiveAttackState implements EntityState<Enemy> {
 
@@ -94,6 +95,11 @@ public class FungopDiveAttackState implements EntityState<Enemy> {
         TextureRegion frame = fungo.getCurrentAnimation().getCurrentFrame();
         batch.draw(frame, fungo.getX(), fungo.getY(), fungo.getWidth() / 2f, fungo.getHeight() / 2f,
                    fungo.getWidth(), fungo.getHeight(), 1f, 1f, currentRotation);
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.FUNGOP_ATTACKING;
     }
     
     @Override public void exit(Enemy fungo) {

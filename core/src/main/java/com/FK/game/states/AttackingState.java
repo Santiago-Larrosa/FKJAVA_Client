@@ -13,6 +13,7 @@ import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
 import com.FK.game.sounds.*;
+import com.FK.game.network.StateMessage;
 
 public class AttackingState implements EntityState<Player> {
     private float attackTimer = 0f;
@@ -61,7 +62,7 @@ public class AttackingState implements EntityState<Player> {
     }
 
     private void handleEarlyMovement(Player player) {
-
+/*
         InputHandler input = player.getInputHandler();
 
         if (input.isMoveLeftPressed()) {
@@ -71,11 +72,11 @@ public class AttackingState implements EntityState<Player> {
         else if (input.isMoveRightPressed()) {
             player.setMovingRight(true);
             player.getVelocity().x = Player.WALK_SPEED * 0.5f;
-        }
+        }*/
     }
 
     private void transitionToNextState(Player player) {
-        InputHandler input = player.getInputHandler();
+     /*   InputHandler input = player.getInputHandler();
     
         boolean wantsToMove = input.isMoveLeftPressed() || input.isMoveRightPressed();
         
@@ -90,7 +91,7 @@ public class AttackingState implements EntityState<Player> {
         if (wantsToMove) {
             player.getVelocity().x = player.isMovingRight() ? 
                 Player.WALK_SPEED : -Player.WALK_SPEED;
-        }
+        }*/
     }
     private void updateHitboxPosition(Player player) {
         attackHitbox.setPosition(
@@ -120,6 +121,11 @@ public class AttackingState implements EntityState<Player> {
             renderer.rect(attackHitbox.x, attackHitbox.y, attackHitbox.width, attackHitbox.height);
             renderer.end();
         }
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.PLAYER_ATTACKING;
     }
 
     @Override

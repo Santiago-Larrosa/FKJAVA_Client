@@ -6,6 +6,7 @@ import com.FK.game.entities.Portal;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.Gdx;
+import com.FK.game.network.StateMessage;
 
 public class PortalState implements EntityState<Portal> {
     private boolean rising = true;
@@ -41,6 +42,11 @@ public class PortalState implements EntityState<Portal> {
     public void render(Portal portal, Batch batch) {
         TextureRegion frame = portal.getCurrentAnimation().getCurrentFrame();
         batch.draw(frame, portal.getX(), portal.getY(), portal.getWidth(), portal.getHeight());
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.PORTAL;
     }
 
     @Override

@@ -10,6 +10,7 @@ import com.FK.game.entities.Player;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.FK.game.network.StateMessage;
 
 
 public class SlopWalkState implements EntityState<Enemy> {
@@ -29,12 +30,19 @@ public class SlopWalkState implements EntityState<Enemy> {
         airConfirmationCount[0] = 0;
     }
 
-    @Override
+     @Override
     public void update(Enemy enemy, float delta) {
         Slop slop = (Slop) enemy;
         slop.getCurrentAnimation().update(delta);
-        Player player = GameContext.getPlayer();
+        
+        // --- NUEVA LÓGICA DE ATAQUE (SIMPLE Y LIMPIA) ---
+        // Primero, comprobamos si debemos atacar.
+        if (enemy.isPlayerInRange() && enemy.canAttack()) {
+            enemy.getStateMachine().changeState(new SlopAttackState());
+            return; // Si atacamos, no necesitamos movernos en este frame.
+        }
 
+        // --- LÓGICA DE MOVIMIENTO (SIN CAMBIOS, SOLO REORDENADA) ---
         if (waitingToTurn) {
             waitTimer += delta;
             if (waitTimer >= waitDuration) {
@@ -42,30 +50,18 @@ public class SlopWalkState implements EntityState<Enemy> {
                 waitTimer = 0f;
                 slop.setMovingRight(!slop.isMovingRight());
                 edgeDetected = true;
-
                 slop.setCurrentAnimation(slop.isMovingRight() ? EnemyAnimationType.SLOP : EnemyAnimationType.SLOP_LEFT);
             }
-
-            if (player != null && slop.canAttack()) {
-                slopPos.set(slop.getBounds().x, slop.getBounds().y);
-                playerPos.set(player.getBounds().x, player.getBounds().y);
-                float distance = slopPos.dst(playerPos);
-                if (distance < 50f) {
-                    slop.getStateMachine().changeState(new SlopAttackState());
-                }
-            }
-
-
-            return;
+            return; // Mientras espera para girar, no hace nada más.
         }
 
         slop.getVelocity().x = slop.isMovingRight() ? slop.getSpeed() : -slop.getSpeed();
         slop.getBounds().x += slop.getVelocity().x * delta;
 
-        if (!waitingToTurn && (slop.hasWallAhead() || ( !hasGroundAhead(slop) && !edgeDetected ))) {
-                waitingToTurn = true;
-                waitTimer = 0f; 
-            }
+        if (!waitingToTurn && (slop.hasWallAhead() || (!hasGroundAhead(slop) && !edgeDetected))) {
+            waitingToTurn = true;
+            waitTimer = 0f;
+        }
 
         if (hasGroundAhead(slop)) {
             edgeDetected = false;
@@ -80,15 +76,6 @@ public class SlopWalkState implements EntityState<Enemy> {
             slop.getBounds().x + slop.getCollisionBoxOffsetX(),
             slop.getBounds().y + slop.getCollisionBoxOffsetY()
         );
-
-        if (player != null && slop.canAttack()) {
-           slopPos.set(slop.getBounds().x, slop.getBounds().y);
-            playerPos.set(player.getBounds().x, player.getBounds().y);
-            float distance = slopPos.dst(playerPos);
-            if (distance < 50f) {
-                slop.getStateMachine().changeState(new SlopAttackState());
-            }
-        }
     }
 
     @Override
@@ -124,6 +111,10 @@ public class SlopWalkState implements EntityState<Enemy> {
         return false;
     }
 
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.SLOP_WALKING;
+    }
 
     private boolean hasGroundAhead(Slop slop) {
     float checkX = slop.isMovingRight() 

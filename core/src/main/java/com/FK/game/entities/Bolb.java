@@ -23,6 +23,7 @@ public class Bolb extends Enemy {
         this.maxHealth = 5; 
         this.health = this.maxHealth; 
         setDamage(1);
+        this.attackRange = 50f;
         setKnockbackX(100f);
         setKnockbackY(200f);
         this.coinValue = 5;
@@ -30,11 +31,27 @@ public class Bolb extends Enemy {
         initStateMachine();
         spawnOnRandomPlatform();
     }
+
+    @Override
+    public AnimationType getDamageAnimationType() {
+        return isMovingRight() ? EnemyAnimationType.BOLB : EnemyAnimationType.BOLB_LEFT;
+    }
     
     @Override
-    protected EnemyDamageState createDamageState(Entity source) {
-        return new EnemyDamageState(source);
+    public void updatePlayerDetection() {
+        this.isPlayerInRange = false;
+
+        for (Player player : GameContext.getActivePlayers()) {
+            if (player != null && !player.isDead()) {
+                // El Bolb usa una detección simple por distancia (radio)
+                if (this.getCenter().dst(player.getCenter()) < this.attackRange) {
+                    this.isPlayerInRange = true;
+                    return;
+                }
+            }
+        }
     }
+
     @Override
     public EntityState<Enemy> getDefaultState() {
         return new BolbWalkState();

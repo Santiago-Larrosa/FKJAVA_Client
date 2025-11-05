@@ -22,6 +22,7 @@ public class Slop extends Enemy {
         setCollisionBoxOffset(0f, 0f);
         setCurrentAnimation(EnemyAnimationType.SLOP);
         this.maxHealth = 3; 
+        this.attackRange = 50f;
         this.health = this.maxHealth; 
         setKnockbackX(100f);
         setKnockbackY(200f);
@@ -30,11 +31,30 @@ public class Slop extends Enemy {
         initStateMachine();
         spawnOnRandomPlatform();
     }
-    
-    @Override
-    protected EnemyDamageState createDamageState(Entity source) {
-        return new EnemyDamageState(source);
+   
+@Override
+    public void updatePlayerDetection() {
+        // Por defecto, asumimos que no hay nadie en rango
+        this.isPlayerInRange = false;
+
+        // Recorremos la lista de jugadores activos
+        for (Player player : GameContext.getActivePlayers()) {
+            if (player != null && !player.isDead()) {
+                // El Slop usa una detección simple por distancia (radio)
+                if (this.getCenter().dst(player.getCenter()) < this.attackRange) {
+                    this.isPlayerInRange = true;
+                    // Encontramos un objetivo, no necesitamos seguir buscando
+                    return;
+                }
+            }
+        }
     }
+    @Override
+public AnimationType getDamageAnimationType() {
+    // La misma lógica, pero con los tipos de animación del enemigo.
+    return isMovingRight() ? EnemyAnimationType.SLOP : EnemyAnimationType.SLOP_LEFT;
+}
+
     @Override
     public EntityState<Enemy> getDefaultState() {
         return (EntityState<Enemy>) new SlopWalkState();

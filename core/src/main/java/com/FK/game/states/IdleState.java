@@ -9,6 +9,7 @@ import com.FK.game.core.*;
 import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
+import com.FK.game.network.StateMessage;
 
 
 public class IdleState implements EntityState<Player> {
@@ -25,7 +26,7 @@ public class IdleState implements EntityState<Player> {
     public void update(Player player, float delta) {
         idleTime += delta;
         player.getCurrentAnimation().update(delta);
-
+    /*
         if (Math.abs(player.getVelocity().x) > 10f) {
             player.getStateMachine().changeState(new WalkingState());
         }
@@ -35,12 +36,13 @@ public class IdleState implements EntityState<Player> {
         else if (!player.isOnGround()) {
             player.getStateMachine().changeState(new FallingState());
         }
+    */
     }
 
 
     @Override
     public void handleInput(Player player) {
-        InputHandler input = player.getInputHandler();
+       /*  InputHandler input = player.getInputHandler();
         if (input.isMoveLeftPressed() || input.isMoveRightPressed()) {
             player.getStateMachine().changeState(new WalkingState());
         }
@@ -53,7 +55,7 @@ public class IdleState implements EntityState<Player> {
         
         if (input.isFireAttackJustPressed()) {
             player.getStateMachine().changeState(new FireAttackState());
-        }
+        }*/
     }
 
 
@@ -75,6 +77,11 @@ public class IdleState implements EntityState<Player> {
                   scale, 
                   scale, 
                   0);
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.PLAYER_IDLE;
     }
 
     @Override

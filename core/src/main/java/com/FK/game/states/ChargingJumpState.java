@@ -10,6 +10,7 @@ import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
 import com.FK.game.sounds.*;
+import com.FK.game.network.StateMessage;
 
 public class ChargingJumpState implements EntityState<Player> {
     private float chargeTime = 0f;
@@ -27,32 +28,32 @@ public class ChargingJumpState implements EntityState<Player> {
 
     @Override
     public void update(Player player, float delta) {
-        InputHandler input = player.getInputHandler();
+      //  InputHandler input = player.getInputHandler();
 
         chargeTime = Math.min(chargeTime + delta, MAX_CHARGE_TIME);
         
         player.getCurrentAnimation().update(delta);
         SoundCache.getInstance().stopLoop(SoundType.WALK);
         
-        if (!input.isJumpPressed()) {
+        /*if (!input.isJumpPressed()) {
             float jumpForce = MIN_JUMP_FORCE + 
                             (MAX_JUMP_FORCE - MIN_JUMP_FORCE) * (chargeTime / MAX_CHARGE_TIME);
             
             player.getVelocity().y = jumpForce;
             player.setOnGround(false);
             player.getStateMachine().changeState(new JumpingState());
-        }
+        }*/
     }
 
     @Override
     public void handleInput(Player player) {
-        InputHandler input = player.getInputHandler();
+       /* InputHandler input = player.getInputHandler();
     
         if (input.isMoveLeftPressed()) {
             player.setMovingRight(false);
         } else if (input.isMoveRightPressed()) {
             player.setMovingRight(true);
-        }
+        }*/
     }
 
     @Override
@@ -74,6 +75,11 @@ public class ChargingJumpState implements EntityState<Player> {
                 scaleX,
                 scaleY,
                 0);
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.PLAYER_CHARGING_JUMP;
     }
 
     @Override

@@ -38,7 +38,6 @@ public class InterlevelLoadingScreen implements Screen {
         shapeRenderer.end();
         
         if (elapsedTime >= DURATION) {
-            gameScreen.loadRandomGameMap();
             game.setScreen(gameScreen);
         }
     }

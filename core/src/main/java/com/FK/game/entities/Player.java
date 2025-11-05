@@ -16,6 +16,11 @@ import com.FK.game.core.*;
 import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
+import com.FK.game.sounds.*;
+import com.FK.game.core.MainGame;
+import com.FK.game.network.*;
+import com.FK.game.core.PlayerData;
+
 
 
 public class Player extends CharacterEntity<Player> {
@@ -41,15 +46,18 @@ public class Player extends CharacterEntity<Player> {
     private float fireCooldown = 0f;
     private InputHandler inputHandler;
     private static final float FIRE_ATTACK_COOLDOWN = 5f;
+    private float currentFireCooldown = 0f;
+    private boolean isFireCharged = false;
     private final PlayerData playerData;
 
 
-    public Player(MainGame game, InputHandler inputHandler, PlayerData playerData) { 
+
+    public Player(MainGame game, PlayerData playerData) { 
         super(2000, FLOOR_Y, WIDTH, HEIGHT, 100, 100); 
         setHealth(5);
-        this.inputHandler = inputHandler; 
         this.playerData = playerData;  
         this.game = game;
+        this.fireCooldown = FIRE_ATTACK_COOLDOWN;
         setDamage(3);
         setKnockbackX(300f);
         setKnockbackY(400f);
@@ -66,20 +74,22 @@ public class Player extends CharacterEntity<Player> {
         this.currentState.enter(this);
         applyPlayerData();
     }
-
    
     @Override
     public void update(float delta) {
         if (!movementLocked) {
             stateMachine.update(delta);
         }
-        super.update(delta); 
+        float newX = lerp(bounds.x, targetX, delta * lerpSpeed);
+        float newY = lerp(bounds.y, targetY, delta * lerpSpeed);
+        bounds.setPosition(newX, newY);
+        collisionBox.setPosition(bounds.x + collisionOffsetX, bounds.y + collisionOffsetY);
         debugPlatformDetection();
     }
-@Override
-public AnimationType getDeathAnimationType() {
-    return PlayerAnimationType.SMOKE;
-}
+    @Override
+    public AnimationType getDeathAnimationType() {
+        return PlayerAnimationType.SMOKE;
+    }
 
 
     public void render(Batch batch) {
@@ -88,6 +98,11 @@ public AnimationType getDeathAnimationType() {
         batch.draw(frame, bounds.x, bounds.y, bounds.width, bounds.height);
     }
 }
+
+    @Override
+    public AnimationType getDamageAnimationType() {
+        return isMovingRight() ? PlayerAnimationType.FALLING_RIGHT : PlayerAnimationType.FALLING_LEFT;
+    }
 
 
     public void setState(EntityState<Player> newState) {
@@ -102,7 +117,25 @@ public AnimationType getDeathAnimationType() {
 
  
 
+public void updateFireCooldown(float delta) {
+        if (fireCooldown > 0) {
+            fireCooldown -= delta;
+            if (fireCooldown < 0) {
+                fireCooldown = 0;
+                isFireCharged = true;
+            }
+            
+            
+        }
+        fireAttackHUD.updateFire(delta, isFireCharged);
+    }
 
+    public void setIsFireCharged(boolean charged) {
+        this.isFireCharged = charged;
+        if (isFireCharged == false) {
+            this.fireCooldown = FIRE_ATTACK_COOLDOWN;
+        }
+    }
 
     public boolean isAttackReady() {
         return this.fireAttackHUD.isAttackReady();
@@ -115,7 +148,7 @@ public AnimationType getDeathAnimationType() {
 
     public void startFireAttackCooldown() {
         this.fireCooldown = FIRE_ATTACK_COOLDOWN;
-        fireAttackHUD.resetCooldown(); 
+        this.isFireCharged = false;
     }
 
 
@@ -166,7 +199,7 @@ public void setCurrentAnimation(AnimationType animType) {
     }
 
     public InputHandler getInputHandler() {
-        return this.inputHandler;
+        return null;
     }
 
     public Rectangle getDamageBox() {
@@ -211,4 +244,73 @@ public void setCurrentAnimation(AnimationType animType) {
         return playerData.coinCount;
     }
 
+    // --- AÑADE ESTE CÓDIGO A TU CLASE Player.java ---
+
+// (Asegúrate de que los enums StateMessage y FacingDirection (o como los llames)
+// estén disponibles en el 'core' para que esta clase pueda usarlos)
+
+/**
+ * Recibe el estado "real" desde el servidor y fuerza a la máquina de estados
+ * VISUAL del cliente a sincronizarse, cambiando la animación.
+ */
+public void setVisualStateFromServer(String networkState, String networkFacing) {
+    
+    // 1. Convertir los strings de red a Enums
+    StateMessage newState;
+    FacingDirection newFacing;
+
+    try {
+        // valueOf() convierte un string (ej: "PLAYER_IDLE") en el enum (StateMessage.PLAYER_IDLE)
+        newState = StateMessage.valueOf(networkState);
+        newFacing = FacingDirection.valueOf(networkFacing); // Asumiendo que tienes un enum para esto
+    } catch (IllegalArgumentException e) {
+        // El servidor envió un estado/dirección que no existe en nuestro enum
+        System.err.println("Estado o dirección de red desconocido: " + networkState + ", " + networkFacing);
+        return;
+    }
+
+    // 2. Actualizar la dirección (para saber si voltear el sprite)
+    // (Ajusta 'isMovingRight' al nombre de tu variable interna para la dirección)
+    this.movingRight = (newFacing == FacingDirection.RIGHT);
+
+    // 3. Obtener el estado visual actual
+    // (Usamos el método que creamos en el 'core' para esto)
+    StateMessage currentStateEnum = stateMachine.getCurrentState().getNetworkState();
+    
+    // 4. Si el estado ya es el correcto, no hacer nada.
+    // (Esto evita reiniciar la animación en cada paquete)
+    if (currentStateEnum == newState) {
+        return; 
+    }
+
+    // 5. El estado es DIFERENTE. Forzar el cambio de estado.
+    // (Esto llamará al método 'enter()' del nuevo estado, que
+    // es donde se debe configurar la nueva animación).
+    switch (newState) {
+        case PLAYER_IDLE:
+            stateMachine.changeState(new IdleState());
+            break;
+        case PLAYER_WALKING:
+            stateMachine.changeState(new WalkingState());
+            break;
+        case PLAYER_JUMPING:
+            stateMachine.changeState(new JumpingState());
+            break;
+        case PLAYER_ATTACKING:
+            stateMachine.changeState(new AttackingState());
+            break;
+        case PLAYER_CHARGING_JUMP:
+            stateMachine.changeState(new ChargingJumpState());
+            break;
+        case PLAYER_FIRING:
+            stateMachine.changeState(new FireAttackState());
+            break;
+        case PLAYER_FALLING:
+            stateMachine.changeState(new FallingState());
+            break;
+        case PLAYER_FALLING_AND_ATTACKING:
+            stateMachine.changeState(new FallingAttackState());
+            break;  
+    }
+}
 }

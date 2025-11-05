@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.FK.game.animations.AnimationHandler;
 import com.badlogic.gdx.Gdx;
+import com.FK.game.network.StateMessage;
 
 public class DeathState implements EntityState<CharacterEntity> {
 
@@ -40,6 +41,10 @@ public class DeathState implements EntityState<CharacterEntity> {
                    character.getY(), 
                    character.getWidth(), 
                    character.getHeight());
+    }
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.DYING;
     }
 
     @Override public void exit(CharacterEntity character) {}

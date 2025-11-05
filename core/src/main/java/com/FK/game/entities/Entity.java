@@ -35,9 +35,13 @@ public abstract class Entity<T extends Entity<T>> {
     protected Array<Rectangle> collisionObjects;
     protected float damage = 0;
     private boolean hasWallAhead;
+    protected float targetX, targetY;
+    protected float lerpSpeed = 30f;
 
     public Entity(float x, float y, float width, float height, float CollisionBoxWidth, float colisionBoxHeight) {
         bounds = new Rectangle(x, y, width, height);
+        targetX = x;
+        targetY = y;
         velocity = new Vector2();
         collisionBox = new Rectangle(x, y, CollisionBoxWidth, colisionBoxHeight);
         this.DamageBox = new Rectangle(bounds.x, bounds.y, 0, 0);
@@ -68,6 +72,16 @@ public abstract class Entity<T extends Entity<T>> {
     }
     public boolean isMovingRight() {
         return movingRight;
+    }
+
+    public void setTargetPosition(float x, float y) {
+        //System.out.println("Entidad objetivo posicionada en: (" + x + ", " + y + ")");
+        this.targetX = x;
+        this.targetY = y;
+    }
+
+    protected float lerp(float a, float b, float t) {
+        return a + (b - a) * Math.min(t, 1f);
     }
 
      public void debugPlatformDetection() {      

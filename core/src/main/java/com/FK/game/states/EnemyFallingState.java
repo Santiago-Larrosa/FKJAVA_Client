@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.FK.game.entities.*;
+import com.FK.game.network.StateMessage;
 
 public class EnemyFallingState implements EntityState<Enemy> {  
     private int groundConfirmationCount = 0;
@@ -83,6 +84,11 @@ public class EnemyFallingState implements EntityState<Enemy> {
                 enemy.getBounds().y,
                 enemy.getBounds().width,
                 enemy.getBounds().height);
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.ENEMY_FALLING;
     }
 
     @Override

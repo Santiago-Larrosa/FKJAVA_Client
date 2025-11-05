@@ -5,6 +5,7 @@ import com.FK.game.animations.ObjectsAnimationType;
 import com.FK.game.entities.Fire; 
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.FK.game.network.StateMessage;
 
 public class FireBasicState implements EntityState<Fire> {
 
@@ -30,6 +31,10 @@ public class FireBasicState implements EntityState<Fire> {
 
     @Override
     public void exit(Fire fire) {
+    }
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.FIRE;
     }
 
     @Override

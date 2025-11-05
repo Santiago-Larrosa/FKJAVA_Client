@@ -9,6 +9,7 @@ import com.FK.game.core.GameContext;
 import com.FK.game.entities.Enemy;
 import com.FK.game.entities.Player;
 import com.FK.game.sounds.*;
+import com.FK.game.network.StateMessage;
 
 public class FungoFlyingState implements EntityState<Enemy> {
 
@@ -63,18 +64,9 @@ public class FungoFlyingState implements EntityState<Enemy> {
         }
         fungo.setPosition(fungo.getX() + fungo.getVelocity().x * delta, fungo.getY() + fungo.getVelocity().y * delta);
         animation.update(delta);
-        Player player = GameContext.getPlayer();
-        if (fungo.canAttack() && player != null) {
-            Rectangle detectionBox = new Rectangle(
-                fungo.getCollisionBox().x - (ATTACK_DETECTION_WIDTH / 2f) + (fungo.getCollisionBox().width / 2f),
-                fungo.getCollisionBox().y - ATTACK_DETECTION_HEIGHT,
-                ATTACK_DETECTION_WIDTH,
-                ATTACK_DETECTION_HEIGHT
-            );
-            if (detectionBox.overlaps(player.getCollisionBox())) {
-                fungo.getStateMachine().changeState(new FungopDiveAttackState());
-            }
-        }
+        if (fungo.isPlayerInRange() && fungo.canAttack()) {
+        fungo.getStateMachine().changeState(new FungopDiveAttackState());
+    }
     }
 
     @Override
@@ -83,6 +75,11 @@ public class FungoFlyingState implements EntityState<Enemy> {
         float rotation = isMovingRight ? -TILT_ANGLE : TILT_ANGLE;
         batch.draw(frame, fungo.getX(), fungo.getY(), fungo.getWidth() / 2f, fungo.getHeight() / 2f,
                    fungo.getWidth(), fungo.getHeight(), 1f, 1f, rotation);
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.FUNGOP_FLIYING;
     }
     
     @Override public void exit(Enemy fungo) {

@@ -19,54 +19,50 @@ public abstract class Enemy extends CharacterEntity<Enemy> {
     protected int coinValue = 1;
     protected boolean canAttack = true;
     protected float attackCooldownTimer = 0f;   
+    protected float attackRange = 0f; 
+    protected boolean isPlayerInRange = false;
     
     public Enemy(float x, float y, float width, float height, float collisionWidth, float collisionHeight, 
                 Array<Rectangle> collisionObjects) {
         super(x, y, width, height, collisionWidth, collisionHeight);
         setHealth(3);
+        
         this.collisionObjects = collisionObjects;
         initializeAnimations();
     }
 
-/*
-     public void receiveDamage(Entity source) {
-        if (this.stateMachine.isInState(EnemyDeathState.class)) {
-            return;
-        }
-        if (stateMachine.getCurrentState() instanceof EnemyDamageState) return;
 
+    @Override
+    public AnimationType getDeathAnimationType() {
+        return EnemyAnimationType.SMOKE; 
+    }
+
+        private void initializeAnimations() {
+        animations = new AnimationHandler[EnemyAnimationType.values().length];
+        AnimationCache cache = AnimationCache.getInstance();
         
-        this.getStateMachine().changeState(new EnemyDamageState(source));
-        if (isDead()) {
-        stateMachine.changeState(new EnemyDeathState());
+        for (EnemyAnimationType type : EnemyAnimationType.values()) {
+            animations[type.ordinal()] = cache.createAnimation(type);
+        }
     }
-     }*/
-@Override
-public AnimationType getDeathAnimationType() {
-    return EnemyAnimationType.SMOKE; // O la animación de muerte del enemigo
-}
-
-    private void initializeAnimations() {
-    animations = new AnimationHandler[EnemyAnimationType.values().length];
-    AnimationCache cache = AnimationCache.getInstance();
-    
-    for (EnemyAnimationType type : EnemyAnimationType.values()) {
-        animations[type.ordinal()] = cache.createAnimation(type);
-    }
-}
     
     @Override
-public void update(float delta) {
+    public void update(float delta) {
+        updatePlayerDetection(); 
+        stateMachine.update(delta);
+    }
 
-    stateMachine.update(delta);
-}
+    protected abstract void updatePlayerDetection();
+
+    public boolean isPlayerInRange() {
+        return isPlayerInRange;
+    }
 
     @Override
     public void render(Batch batch) {
         stateMachine.render(batch);
     }
     
-    protected abstract EnemyDamageState createDamageState(Entity source);
     
 
     @Override
@@ -75,17 +71,17 @@ public void update(float delta) {
     }
 
   @Override
-public void setCurrentAnimation(AnimationType animType) {
-     EnemyAnimationType type = (EnemyAnimationType) animType;
-    if (type == null || type.ordinal() >= animations.length) {
-            throw new IllegalArgumentException("Tipo de animación inválido");
-        }
-        this.currentAnimation = animations[type.ordinal()];
-        if (currentAnimation == null) {
-            throw new IllegalStateException("Animación no cargada para: " + type);
-        }
+    public void setCurrentAnimation(AnimationType animType) {
+        EnemyAnimationType type = (EnemyAnimationType) animType;
+        if (type == null || type.ordinal() >= animations.length) {
+                throw new IllegalArgumentException("Tipo de animación inválido");
+            }
+            this.currentAnimation = animations[type.ordinal()];
+            if (currentAnimation == null) {
+                throw new IllegalStateException("Animación no cargada para: " + type);
+            }
 
-}
+    }
 
     public AnimationHandler getCurrentAnimation() {
         return currentAnimation;

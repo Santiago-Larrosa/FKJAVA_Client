@@ -30,6 +30,7 @@ public abstract class CharacterEntity<T extends CharacterEntity<T>> extends Enti
 
     public abstract AnimationType getDeathAnimationType();
     public abstract void setCurrentAnimation(AnimationType animType);
+    public abstract AnimationType getDamageAnimationType();
 
 
 

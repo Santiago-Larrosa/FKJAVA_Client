@@ -10,6 +10,7 @@ import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
 import com.FK.game.sounds.*;
+import com.FK.game.network.StateMessage;
 
 
 public class WalkingState implements EntityState<Player> {
@@ -29,11 +30,11 @@ public class WalkingState implements EntityState<Player> {
 
    @Override
     public void update(Player player, float delta) {
-        InputHandler input = player.getInputHandler();
-        handleInput(player);
+      // InputHandler input = player.getInputHandler();
+        //handleInput(player);
         player.getCurrentAnimation().update(delta);
-        player.getBounds().y += player.getVelocity().y * delta;
-
+       // player.getBounds().y += player.getVelocity().y * delta;
+       /* 
         if (StateUtils.checkFalling(player, delta, airConfirmationCount)) {
             return;
         }
@@ -41,8 +42,8 @@ public class WalkingState implements EntityState<Player> {
         if (player.getVelocity().y > 0) {
             player.getStateMachine().changeState(new JumpingState());
             return;
-        }
-
+        }*/
+/*
         if (input.isJumpPressed() && player.isOnPlataform()) {
             player.getStateMachine().changeState(new ChargingJumpState());
             return;
@@ -53,20 +54,21 @@ public class WalkingState implements EntityState<Player> {
             SoundCache.getInstance().stopLoop(SoundType.WALK);
             return;
         }
-
-        boolean isMoving = input.isMoveLeftPressed() || input.isMoveRightPressed();
-
+*/
+      //  boolean isMoving = input.isMoveLeftPressed() || input.isMoveRightPressed();
+/*
         if (!isMoving) {
             player.getStateMachine().changeState(new IdleState());
             return;
         }
-
+*/
         SoundCache.getInstance().playLoop(SoundType.WALK, 0.4f);
     }
 
 
     @Override
     public void handleInput(Player player) {
+      /*  
         InputHandler input = player.getInputHandler();
         boolean movingLeft = input.isMoveLeftPressed();
         boolean movingRight = input.isMoveRightPressed();
@@ -83,7 +85,8 @@ public class WalkingState implements EntityState<Player> {
             player.getVelocity().x = 0;
         }
         player.setCurrentAnimation(player.isMovingRight() ? 
-            PlayerAnimationType.WALK_RIGHT : PlayerAnimationType.WALK_LEFT);
+            PlayerAnimationType.WALK_RIGHT : PlayerAnimationType.WALK_LEFT);*/
+            
     }
 
     private void updateAnimation(Player player) {
@@ -107,6 +110,11 @@ public class WalkingState implements EntityState<Player> {
                  player.getBounds().width,
                  player.getBounds().height,
                  1f, 1f, tiltAngle);
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.PLAYER_WALKING;
     }
 
     @Override

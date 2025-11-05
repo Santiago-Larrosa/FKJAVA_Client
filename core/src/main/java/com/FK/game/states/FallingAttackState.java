@@ -12,6 +12,7 @@ import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
 import com.FK.game.sounds.*;
+import com.FK.game.network.StateMessage;
 
 public class FallingAttackState implements EntityState<Player> {
     private boolean startedPassAnimation = false;
@@ -36,8 +37,8 @@ public class FallingAttackState implements EntityState<Player> {
 
     @Override
     public void update(Player player, float delta) {
-        
-        InputHandler input = player.getInputHandler();
+       
+       // InputHandler input = player.getInputHandler();
 
         player.getDamageBox().set(player.getX(), player.getY(), player.getCollisionWidth(), player.getCollisionHeight());
         SoundCache.getInstance().playLoop(SoundType.FALLING_ATACK, 0.4f);
@@ -92,12 +93,12 @@ public class FallingAttackState implements EntityState<Player> {
             } else {
                 player.getBounds().x = nextX;
                 player.getBounds().y = nextY;
-
+/*
                 if (!input.isAttackPressed()) { 
                     player.getVelocity().set(0, 0);
                     SoundCache.getInstance().stopLoop(SoundType.FALLING_ATACK);
                     player.getStateMachine().changeState(new FallingState());
-                }
+                }*/
             }
 
 
@@ -118,6 +119,11 @@ public class FallingAttackState implements EntityState<Player> {
             player.getBounds().width,
             player.getBounds().height
         );
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.PLAYER_FALLING_AND_ATTACKING;
     }
 
     @Override

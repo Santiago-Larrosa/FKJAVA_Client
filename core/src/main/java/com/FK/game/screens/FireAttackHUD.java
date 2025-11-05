@@ -27,10 +27,7 @@ public class FireAttackHUD extends BaseHUD{
     
     private enum HUDState { UNLOADED, TRANSITION_TO_LOADED, LOADED, TRANSITION_TO_UNLOADED }
     private HUDState state = HUDState.UNLOADED;
-
     private float stateTime = 0f;
-    private float cooldown = 5f;
-    private float cooldownTimer = 0f;
 
     public FireAttackHUD() {
     AnimationCache cache = AnimationCache.getInstance();
@@ -48,13 +45,17 @@ public class FireAttackHUD extends BaseHUD{
     this.scale = 0.25f;
 }
 
+    @Override
     public void update(float delta) {
+
+    }
+
+    public void updateFire(float delta, boolean isCharged) {
         stateTime += delta;
 
         switch (state) {
             case UNLOADED:
-                cooldownTimer += delta;
-                if (cooldownTimer >= cooldown) {
+                if (isCharged) {
                     changeState(HUDState.TRANSITION_TO_LOADED, loadingAnim);
                 }
                 break;
@@ -71,7 +72,6 @@ public class FireAttackHUD extends BaseHUD{
             case TRANSITION_TO_UNLOADED:
                 if (stateTime >= currentAnim.getTotalDuration()) {
                     changeState(HUDState.UNLOADED, unloadedAnim);
-                    cooldownTimer = 0f;
                 }
                 break;
         }
@@ -80,6 +80,7 @@ public class FireAttackHUD extends BaseHUD{
             currentAnim.update(delta);
         }
     }
+
 
     private void changeState(HUDState newState, AnimationHandler newAnim) {
         state = newState;

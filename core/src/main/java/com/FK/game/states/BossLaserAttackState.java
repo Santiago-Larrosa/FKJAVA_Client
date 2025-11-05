@@ -15,6 +15,7 @@ import com.FK.game.core.GameContext;
 import com.FK.game.entities.Enemy;
 import com.FK.game.entities.Boss; 
 import com.FK.game.entities.Player;
+import com.FK.game.network.StateMessage;
 
 public class BossLaserAttackState implements EntityState<Enemy> {
 
@@ -36,23 +37,25 @@ public class BossLaserAttackState implements EntityState<Enemy> {
     private Polygon damagePolygon;  
 
     @Override
-    public void enter(Enemy enemy) {
-        currentPhase = Phase.WARNING;
-        phaseTimer = 0f;
+public void enter(Enemy enemy) {
+    currentPhase = Phase.WARNING;
+    phaseTimer = 0f;
 
-        Player player = GameContext.getPlayer();
-        if (player != null) {
-            targetPosition = new Vector2(
-                player.getCollisionBox().x + player.getCollisionBox().width / 2,
-                player.getCollisionBox().y + player.getCollisionBox().height / 2
-            );
-        } else {
-            targetPosition = new Vector2(enemy.getX(), 0);
-        }
+    // --- LÓGICA DE APUNTADO MEJORADA ---
+    Boss boss = (Boss) enemy;
+    Player target = boss.getCurrentTarget(); // Obtenemos el objetivo que el Jefe ya decidió
 
-        Vector2 bossCenter = new Vector2(enemy.getX() + enemy.getWidth() / 2, enemy.getY() + enemy.getHeight() / 2);
-        attackAngle = targetPosition.cpy().sub(bossCenter).angleDeg();
+    if (target != null) {
+        // Apuntamos al centro del objetivo
+        targetPosition = target.getCenter();
+    } else {
+        // Si por alguna razón no hay objetivo, apunta hacia abajo como respaldo
+        targetPosition = new Vector2(enemy.getX(), 0);
     }
+
+    Vector2 bossCenter = new Vector2(enemy.getX() + enemy.getWidth() / 2, enemy.getY() + enemy.getHeight() / 2);
+    attackAngle = targetPosition.cpy().sub(bossCenter).angleDeg();
+}
 
     @Override
     public void update(Enemy enemy, float delta) {
@@ -106,21 +109,28 @@ public class BossLaserAttackState implements EntityState<Enemy> {
     }
 
     private void checkCollision(Enemy enemy) {
-    Player player = GameContext.getPlayer();
-    if (player == null || damagePolygon == null) return;
+    if (damagePolygon == null) return;
 
-    Rectangle pRect = player.getCollisionBox();
-    Polygon playerPolygon = new Polygon(new float[]{
-        pRect.x, pRect.y,
-        pRect.x + pRect.width, pRect.y,
-        pRect.x + pRect.width, pRect.y + pRect.height,
-        pRect.x, pRect.y + pRect.height
-    });
+    // Recorremos la lista de TODOS los jugadores activos
+    for (Player player : GameContext.getActivePlayers()) {
+        if (player == null || player.isDead()) {
+            continue; // Ignoramos jugadores nulos o muertos
+        }
 
-    if (Intersector.overlapConvexPolygons(damagePolygon, playerPolygon)) {
-        if (damageCooldown <= 0) {
+        // Creamos el polígono para el jugador actual
+        Rectangle pRect = player.getCollisionBox();
+        Polygon playerPolygon = new Polygon(new float[]{
+            pRect.x, pRect.y,
+            pRect.x + pRect.width, pRect.y,
+            pRect.x + pRect.width, pRect.y + pRect.height,
+            pRect.x, pRect.y + pRect.height
+        });
+
+        // Comprobamos la colisión
+        if (Intersector.overlapConvexPolygons(damagePolygon, playerPolygon)) {
+            // El método receiveDamage del jugador ya maneja su propio cooldown de invencibilidad,
+            // por lo que no necesitamos un temporizador de daño aquí.
             player.receiveDamage(enemy);
-            damageCooldown = 0.2f; 
         }
     }
 }
@@ -166,6 +176,11 @@ public class BossLaserAttackState implements EntityState<Enemy> {
 
     @Override
     public void handleInput(Enemy enemy) {}
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.BOSS_LASER_ATTACK;
+    }
 
     public float getAttackAngle() {
         return attackAngle;

@@ -8,6 +8,9 @@ import com.badlogic.gdx.math.Rectangle;
 import com.FK.game.animations.*;
 import com.FK.game.core.*; 
 import com.FK.game.entities.*;
+import com.FK.game.screens.*;
+import com.FK.game.states.*;
+import com.FK.game.network.StateMessage;
 
 public class JumpingState implements EntityState<Player> {
     private float airTime = 0f;
@@ -29,18 +32,18 @@ public class JumpingState implements EntityState<Player> {
 
     @Override
     public void update(Player player, float delta) {
-        InputHandler input = player.getInputHandler();
+       // InputHandler input = player.getInputHandler();
 
         airTime += delta;
         player.getCurrentAnimation().update(delta);
-        if (input.isMoveLeftPressed()) {
+        /*if (input.isMoveLeftPressed()) {
             player.getVelocity().x = -Player.WALK_SPEED * AIR_CONTROL;
             player.setCurrentAnimation(PlayerAnimationType.JUMPING_LEFT);
         } else if (input.isMoveRightPressed()) {
             player.getVelocity().x = Player.WALK_SPEED * AIR_CONTROL;
             player.setCurrentAnimation(PlayerAnimationType.JUMPING_RIGHT);
-        }
-
+        }*/
+/*
         if (checkCeilingCollision(player)) {
             player.getVelocity().y = 0;
             hitCeiling = true;
@@ -48,11 +51,11 @@ public class JumpingState implements EntityState<Player> {
 
         if (hitCeiling || player.getVelocity().y < 0) {
             player.getStateMachine().changeState(new FallingState());
-        }
+        }*/
     }
 
     private boolean checkCeilingCollision(Player player) {
-        Rectangle collisionBox = player.getCollisionBox();
+       /* Rectangle collisionBox = player.getCollisionBox();
         Rectangle ceilingSensor = new Rectangle(
             collisionBox.x + collisionBox.width * 0.2f,
             collisionBox.y + collisionBox.height,
@@ -64,13 +67,13 @@ public class JumpingState implements EntityState<Player> {
                 player.setCollisionY(rect.y - collisionBox.height - 1);
                 return true;
             }
-        }
+        }*/
         return false;
     }
 
     @Override
     public void handleInput(Player player) {
-        InputHandler input = player.getInputHandler();
+     /*   InputHandler input = player.getInputHandler();
         if (input.isAttackJustPressed()) {
             player.getStateMachine().changeState(new FallingAttackState());
         }
@@ -78,7 +81,7 @@ public class JumpingState implements EntityState<Player> {
             player.setMovingRight(false);
         } else if (input.isMoveRightPressed()) {
             player.setMovingRight(true);
-        }
+        }*/
     }
 
     @Override
@@ -95,6 +98,11 @@ public class JumpingState implements EntityState<Player> {
             scale,
             scale,
             0);
+    }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.PLAYER_JUMPING;
     }
 
     @Override

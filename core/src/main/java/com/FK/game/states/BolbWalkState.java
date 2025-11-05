@@ -8,6 +8,7 @@ import com.FK.game.entities.Player;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.FK.game.network.StateMessage;
 
 
 public class BolbWalkState implements EntityState<Enemy> {
@@ -32,8 +33,6 @@ public class BolbWalkState implements EntityState<Enemy> {
     public void update(Enemy enemy, float delta) {
         Bolb bolb = (Bolb) enemy;
         bolb.getCurrentAnimation().update(delta);
-
-        Player player = GameContext.getPlayer();
 
         if (waitingToTurn) {
             waitTimer += delta;
@@ -74,14 +73,13 @@ public class BolbWalkState implements EntityState<Enemy> {
             bolb.getBounds().y + bolb.getCollisionBoxOffsetY()
         );
 
-        if (player != null && bolb.canAttack()) {
-            bolbPos.set(bolb.getBounds().x, bolb.getBounds().y);
-            playerPos.set(player.getBounds().x, player.getBounds().y);
-            float distance = bolbPos.dst(playerPos);
-            if (distance < 50f) {
-                bolb.getStateMachine().changeState(new BolbAttackState());
-            }
+        if (enemy.isPlayerInRange() && enemy.canAttack()) {
+            enemy.getStateMachine().changeState(new BolbAttackState());
+            return; // Cambiamos de estado, no necesitamos hacer más nada aquí
         }
+
+
+        
     }
 
     @Override
@@ -135,4 +133,9 @@ public class BolbWalkState implements EntityState<Enemy> {
     }
     return false;
 }
+
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.BOLB_WALKING;
+    }
 }

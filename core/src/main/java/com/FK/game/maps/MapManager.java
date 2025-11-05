@@ -30,6 +30,7 @@ public class MapManager {
         TmxMapLoader loader = new TmxMapLoader();
         for (String file : mapFiles) {
             TiledMap map = loader.load(file);
+            map.getProperties().put("fileName", file);
             maps.add(map);
         }
     }
@@ -43,6 +44,16 @@ public class MapManager {
             currentMapIndex = index;
         }
     }
+    public void setMapByName(String mapName) {
+    for (int i = 0; i < maps.size; i++) {
+        TiledMap map = maps.get(i);
+        String fileName = map.getProperties().get("fileName", String.class);
+        if (fileName != null && fileName.equals(mapName)) {
+            currentMapIndex = i;
+            return;
+        }
+    }
+}
 
     public void setRandomMap() {
         currentMapIndex = MathUtils.random(0, maps.size - 1);

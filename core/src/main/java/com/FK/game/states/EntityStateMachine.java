@@ -64,5 +64,6 @@ public class EntityStateMachine<T extends Entity> {
         public boolean isInState(Class<?> stateClass) {
     return currentState != null && currentState.getClass() == stateClass;
 }
+    
 
 }

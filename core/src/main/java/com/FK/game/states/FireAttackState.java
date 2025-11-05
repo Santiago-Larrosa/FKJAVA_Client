@@ -8,6 +8,7 @@ import com.FK.game.animations.*;
 import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.sounds.*;
+import com.FK.game.network.StateMessage;
 
 
 public class FireAttackState implements EntityState<Player> {
@@ -106,6 +107,10 @@ public class FireAttackState implements EntityState<Player> {
             player.getBounds().width,
             player.getBounds().height
         );
+    }
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.PLAYER_FIRING;
     }
 
     @Override

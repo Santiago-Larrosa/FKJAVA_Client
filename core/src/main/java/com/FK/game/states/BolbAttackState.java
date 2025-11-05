@@ -8,6 +8,8 @@ import com.FK.game.entities.Enemy;
 import com.FK.game.entities.Bolb;
 import com.FK.game.entities.Player;
 import com.FK.game.states.EntityState;
+import com.FK.game.states.BolbWalkState;
+import com.FK.game.network.StateMessage;
 
 public class BolbAttackState implements EntityState<Enemy> {
 
@@ -59,7 +61,10 @@ public class BolbAttackState implements EntityState<Enemy> {
         Bolb bolb = (Bolb) enemy;
         bolb.getDamageBox().set(0, 0, 0, 0);
     }
-
+    @Override
+    public StateMessage getNetworkState() {
+        return StateMessage.BOLB_ATTACKING;
+    }
     @Override
     public void handleInput(Enemy enemy) {}
 }

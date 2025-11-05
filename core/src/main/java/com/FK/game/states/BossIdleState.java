@@ -8,6 +8,7 @@ import com.FK.game.entities.Player;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.FK.game.network.StateMessage;
 
 public class BossIdleState implements EntityState<Enemy> {
     private float attackTimer;
@@ -21,7 +22,9 @@ public class BossIdleState implements EntityState<Enemy> {
     @Override
     public void update(Enemy enemy, float delta) {
         attackTimer += delta;
-        if (attackTimer >= ATTACK_INTERVAL) {
+        if (attackTimer >= ATTACK_INTERVAL && enemy.isPlayerInRange()) {
+            ((Boss) enemy).acquireTarget(); 
+            // 2. Se inicia el estado de ataque
             enemy.getStateMachine().changeState(new BossLaserAttackState());
         }
     }
@@ -33,7 +36,10 @@ public class BossIdleState implements EntityState<Enemy> {
     @Override
     public void exit(Enemy enemy) {
     }
-
+@Override
+    public StateMessage getNetworkState() {
+        return StateMessage.BOSS_IDLE;
+    }
     @Override
     public void handleInput(Enemy enemy) {}
 }
