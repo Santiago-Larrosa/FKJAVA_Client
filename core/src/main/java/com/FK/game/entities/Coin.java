@@ -5,10 +5,11 @@ package com.FK.game.entities;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
+import com.FK.game.network.EntityTypeMessage;
+import com.FK.game.animations.Assets;
 
 public class Coin extends Entity<Coin> {
 
-    private static final Texture TEXTURE = new Texture("coin.png");
     private static final float COIN_PICKUP_RADIUS = 80f;    
     private static final float SPEED = 350f;
     private static final float TURN_SPEED = 15f; 
@@ -16,8 +17,9 @@ public class Coin extends Entity<Coin> {
 
     public Coin(float x, float y) {
         super(x, y, 16, 16, 16, 16);
+        this.entityType = EntityTypeMessage.COIN;
     }
-
+    
     public void setTarget(Player player) {
         if (this.target == null) { 
             this.target = player;
@@ -46,7 +48,7 @@ public class Coin extends Entity<Coin> {
 
     @Override
     public void render(Batch batch) {
-        batch.draw(TEXTURE, getX(), getY(), getWidth(), getHeight());
+        batch.draw(Assets.coinTexture, getX(), getY(), getWidth(), getHeight());
     }
     
     @Override
@@ -58,7 +60,9 @@ public class Coin extends Entity<Coin> {
         return COIN_PICKUP_RADIUS;
     }   
 
-    public static void disposeTexture() {
-        if (TEXTURE != null) TEXTURE.dispose();
+
+    
+    @Override
+    public void setVisualStateFromServer(String networkState, String networkFacing) {
     }
 }

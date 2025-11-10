@@ -24,10 +24,6 @@ public class EntityStateMachine<T extends Entity> {
     }
 
    public void changeState(EntityState<? super T> newState) {
-    Gdx.app.log("STATE_MACHINE", "Changing from " +
-    (currentState == null ? "null" : currentState.getClass().getSimpleName()) +
-    " to " + newState.getClass().getSimpleName());
-
     if (currentState != null) {
         currentState.exit(entity);
     }

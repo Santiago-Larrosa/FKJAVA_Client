@@ -60,6 +60,10 @@ public void receiveDamage(Entity source) {
     }
 }
 
+@Override
+    public void setVisualStateFromServer(String networkState, String networkFacing) {
+    }
+
  public void updateDamageCooldown(float delta) {
     if (damageCooldownTime > 0) {
         damageCooldownTime -= delta;

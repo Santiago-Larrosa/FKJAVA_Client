@@ -46,7 +46,7 @@ public class FungoFlyingState implements EntityState<Enemy> {
             fungo.getVelocity().y += FLAP_FORCE;
         }
         this.lastFrameIndex = currentFrameIndex;
-        
+        /*
         if (waitingToTurn) {
             waitTimer += delta;
             fungo.getVelocity().x = 0;
@@ -63,10 +63,11 @@ public class FungoFlyingState implements EntityState<Enemy> {
             }
         }
         fungo.setPosition(fungo.getX() + fungo.getVelocity().x * delta, fungo.getY() + fungo.getVelocity().y * delta);
+        */
         animation.update(delta);
-        if (fungo.isPlayerInRange() && fungo.canAttack()) {
-        fungo.getStateMachine().changeState(new FungopDiveAttackState());
-    }
+        //if (fungo.isPlayerInRange() && fungo.canAttack()) {
+        //fungo.getStateMachine().changeState(new FungopDiveAttackState());
+   // }
     }
 
     @Override

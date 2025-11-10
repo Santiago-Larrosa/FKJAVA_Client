@@ -33,18 +33,18 @@ public class FireAttackState implements EntityState<Player> {
     @Override
     public void enter(Player player) {
         player.setDamage(0.5f);
-       if (!player.isAttackReady()) {
+       /*if (!player.isAttackReady()) {
         player.getStateMachine().changeState(new IdleState());
         return;
-    }
+    }*/
         SoundCache.getInstance().playLoop(SoundType.FIRE, 0.4f);
-        player.getFireAttackHUD().resetCooldown();
+        //player.getFireAttackHUD().resetCooldown();
 
         ignitionTimer = 0f;
         attackTimer = 0f;
         playingIgnition = true;
 
-        player.startFireAttackCooldown();
+        //player.startFireAttackCooldown();
 
         if (player.isMovingRight()) {
             player.setCurrentAnimation(PlayerAnimationType.IGNITION);
@@ -68,17 +68,17 @@ public class FireAttackState implements EntityState<Player> {
     @Override
     public void update(Player player, float delta) {
 
-        if (playingIgnition) {
-            ignitionTimer += delta;
+       /* if (playingIgnition) {
+            ignitionTimer += delta;*/
             player.getCurrentAnimation().update(delta);
-
+/*
             if (ignitionTimer >= player.getCurrentAnimation().getTotalDuration()) {
                 playingIgnition = false;
                 attackTimer = 0f;
-                player.setCurrentAnimation(player.isMovingRight()
+               */ player.setCurrentAnimation(player.isMovingRight()
                     ? PlayerAnimationType.FIRE_ATACK
                     : PlayerAnimationType.FIRE_ATACK_LEFT);
-            }
+            /*}
         } else {
             attackTimer += delta;
             player.getCurrentAnimation().update(delta);
@@ -89,7 +89,7 @@ public class FireAttackState implements EntityState<Player> {
                 }
                 player.getStateMachine().changeState(new IdleState());
             }
-        }
+        }*/
     }
 
 

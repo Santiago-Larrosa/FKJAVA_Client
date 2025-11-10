@@ -55,7 +55,6 @@
         private int myPlayerId = -1;
         private Array<BaseHUD> hudElements;
         private BitmapFont hudFont;
-        private Texture coinTexture;
         private boolean isCameraMoving = false;
         private float cameraMoveStartX, cameraMoveStartY;
         private float cameraMoveTargetX, cameraMoveTargetY;
@@ -82,8 +81,9 @@
         private Rectangle portalSpawnPoint; 
         private Portal portal;
         DatagramSocket socket = null;
-InetAddress serverAddress = null;
+        InetAddress serverAddress = null;
         int serverPort = 54555;
+        private Map<Integer, Entity> remoteEntities = new HashMap<>();
         private final Map<Integer, Player> remotePlayers = new HashMap<>();
         private Texture whitePixelTexture;
         private TextureRegion whitePixelRegion; 
@@ -103,9 +103,8 @@ InetAddress serverAddress = null;
         public GameScreen(MainGame game) {
             this.game = game;
         }
-        // Señal enviada desde ClientThread
-private boolean pendingLevelChange = false;
-private float pendingLevelChangeTimer = 0f;
+        private boolean pendingLevelChange = false;
+        private float pendingLevelChangeTimer = 0f;
 
         
 
@@ -114,12 +113,12 @@ private float pendingLevelChangeTimer = 0f;
             shapeRenderer = new ShapeRenderer();
             upgradeManager = new UpgradeManager();
             batch = new SpriteBatch();
-            try {
+            /*try {
                 socket = new DatagramSocket();
                 serverAddress = InetAddress.getByName("127.0.0.1"); // o la IP del servidor
             } catch (SocketException | UnknownHostException e) {
                 e.printStackTrace();
-            }
+            }*/
             if (isFirstRun) {
                 isFirstRun = false;
             entities = new Array<>();
@@ -133,18 +132,15 @@ private float pendingLevelChangeTimer = 0f;
             viewport = new StretchViewport(WORLD_WIDTH * 0.7f, WORLD_HEIGHT * 0.7f, camera);
             viewport.apply();
             camera.position.set(WORLD_WIDTH/2 * 0.7f, WORLD_HEIGHT/2 * 0.7f, 0);
-            whitePixelTexture = new Texture("white_pixel.jpg");//-
+            whitePixelTexture = Assets.whitePixel;//-
             whitePixelRegion = new TextureRegion(whitePixelTexture);
             if (!AnimationCache.getInstance().update()) {
                 game.setScreen(new LoadingScreen(game));
                 return;
             }
-            groundImpactEffectTemplate = new ParticleEffect();
-            groundImpactEffectTemplate.load(Gdx.files.internal("ground_impact.p"), Gdx.files.internal(""));
-            uiSkin = new Skin(Gdx.files.internal("ui/glassy-ui.json"));
+            uiSkin = UIAssets.glassySkin;
             uiStage = new Stage(new ScreenViewport());
             hudFont = new BitmapFont();
-            coinTexture = new Texture("coin.png");//-
             loadInitialMap(); 
             }
             NetworkInputAdapter networkAdapter = new NetworkInputAdapter(
@@ -190,14 +186,85 @@ private float pendingLevelChangeTimer = 0f;
             playerToUpdate.setVisualStateFromServer(stateName, facingName);
         }
 
+        public void removeEntityById(int id) {
+            Entity e = remoteEntities.remove(id);
+            if (e != null) {
+                entities.removeValue(e, true);
+                System.out.println("[CLIENT] Entidad removida ID=" + id);
+            } else {
+                System.out.println("[CLIENT] Intento de remover entidad inexistente ID=" + id);
+            }
+        }
+
+
+        public void updateEntityState(int id, String type, float x, float y, String state, String facing, float rotation) {
+
+            Entity e = remoteEntities.get(id);
+
+            if (e != null) {
+                //System.out.println("Actualizando estado de la entidad ID=" + id + " a posición (" + x + ", " + y + ")" + "de tipo " + type);
+                e.setTargetPosition(x, y);
+                e.setVisualStateFromServer(state, facing);
+                e.setRotation(rotation);
+                return;
+            }
+
+            if (e == null) {
+                // auto-spawn porque no existe
+                System.out.println("[CLIENT] Creando entidad ID=" + id);
+
+                e = createEntityFromState(id, type);
+                if (e == null) {
+                    System.err.println("Tipo entidad desconocido en auto-spawn");
+                    return;
+                }
+                e.setPosition(x, y);
+                e.setRotation(rotation);
+                remoteEntities.put(id, e);
+                entities.add(e);
+            }
+
+            e.setTargetPosition(x, y);
+            e.setVisualStateFromServer(state, facing);
+            e.setRotation(rotation);
+            
+        }
+
+        public MainGame getGame() {
+            return game;
+        }
+
+        private Entity createEntityFromState(int id, String type) {
+            Entity e;
+
+            switch(type) {
+                case "BOLB":  e = new Bolb(collisionObjects); break;
+                case "BOSS": e = new Boss(collisionObjects); break;
+                case "FIRE": e = new Fire(0,0); break;
+                case "SLOP": e = new Slop(collisionObjects); break;
+                case "FUNGOP": e = new Fungop(collisionObjects); break;
+                case "COIN":  e = new Coin(0,0); break;
+                case "PORTAL": e = new Portal(0,0); break;
+                default: return null;
+            }
+
+            e.setNetworkId(id);
+            return e;
+        }
+
+
         public int getMyPlayerId() {
             return myPlayerId;
         }
 
         private void loadInitialMap() {
             game.roomsClearedCount = 0;
-            cleanUpCurrentMap();
-            
+            if (GameContext.getMyPlayerId() == -1) {
+                System.out.println("[GameScreen] Jugador aún no conectado. Se omite cleanUpCurrentMap().");
+            } else {
+                System.out.println("[GameScreen] Ejecutando cleanUpCurrentMap() normalmente.");
+                cleanUpCurrentMap();
+            }
             MapManager mapManager = new MapManager(0.7f);
             mapManager.loadMaps("maps/SpawnHall.tmx");
             map = mapManager.getMaps().first();
@@ -205,10 +272,10 @@ private float pendingLevelChangeTimer = 0f;
             
             loadCollisionObjects(mapManager.getScale());
             
-            Array<Rectangle> portalSpawns = loadSpawnPoints("Portal", mapManager.getScale());
-            if (portalSpawns.size > 0) {
+            //Array<Rectangle> portalSpawns = loadSpawnPoints("Portal", mapManager.getScale());
+            /*if (portalSpawns.size > 0) {
                 this.portalSpawnPoint = portalSpawns.first();
-            }
+            }*/
             loadEntities(mapManager.getScale(), null, true);
         }
 
@@ -221,7 +288,6 @@ private float pendingLevelChangeTimer = 0f;
 
         public void loadSpecificMap(String mapName) {
             FireAttackHUD existingHUD = myPlayer != null ? myPlayer.getFireAttackHUD() : null;
-
             cleanUpCurrentMap();
 
             MapManager mapManager = new MapManager(0.7f);
@@ -232,17 +298,17 @@ private float pendingLevelChangeTimer = 0f;
 
             loadCollisionObjects(mapManager.getScale());
 
-            Array<Rectangle> portalSpawns = loadSpawnPoints("Portal", mapManager.getScale());
-            if (portalSpawns.size > 0) {
+            //Array<Rectangle> portalSpawns = loadSpawnPoints("Portal", mapManager.getScale());
+           /* if (portalSpawns.size > 0) {
                 this.portalSpawnPoint = portalSpawns.first();
-            }
+            }*/
             System.out.println("cantidad de jugadores remotos antes de cargar el mapa: " + remotePlayers.size());
             System.out.println("La cantidad de entidades antes de cargar el mapa es: " + entities.size);
 
             loadEntities(mapManager.getScale(), existingHUD, false);
         }
-
-        private void cleanUpCurrentMap() {
+  
+        public void cleanUpCurrentMap() {
             if (map != null) map.dispose();
             if (mapRenderer != null) mapRenderer.dispose();
             collisionObjects.clear();
@@ -252,40 +318,57 @@ private float pendingLevelChangeTimer = 0f;
             portal = null;
             portalSpawnPoint = null;
         }
+    public UpgradeWindow getUpgradeWindow() {
+        return upgradeWindow;
+    }
 
+    public Player getMyPlayer() {
+        return myPlayer;
+    }
 
-    private void openUpgradeMenu() {
-            if (myPlayer != null) {
-            myPlayer.getStateMachine().changeState(new IdleState());
-        }
+    public void openUpgradeMenu() {
+    if (myPlayer == null) return; // only open for local player
+    myPlayer.getStateMachine().changeState(new IdleState());
+    game.client.sendNetworkInput(NetworkMessage.STOP_ATTACK);
 
-            upgradeWindow = new UpgradeWindow(uiSkin, this::closeUpgradeMenu, game.playerData, upgradeManager);
-            uiStage.addActor(upgradeWindow);
-            upgradeWindow.centerWindow();
-            Gdx.input.setInputProcessor(uiStage);
-        }
+    upgradeWindow = new UpgradeWindow(uiSkin, this::closeUpgradeMenu, game.playerData, upgradeManager);
+    uiStage.addActor(upgradeWindow);
+    upgradeWindow.centerWindow();
+    Gdx.input.setInputProcessor(uiStage);
+}
+
 
         private void closeUpgradeMenu() {
-            currentState = GameState.RUNNING;
-            upgradeWindow.remove(); 
-            Gdx.input.setInputProcessor(null); 
-            Gdx.app.log("GameScreen", "Menú de mejoras CERRADO. Juego reanudado.");
-        }
-        private void loadEntities(float scale, FireAttackHUD existingHUD, boolean isSpawnHall) {
-            Array<Rectangle> playerSpawns = loadSpawnPoints("Player", scale);
-            Array<Rectangle> bolbSpawns = loadSpawnPoints("Bolb", scale);
-            Array<Rectangle> slopSpawns = loadSpawnPoints("Slop", scale);
-            Array<Rectangle> fungopSpawns = loadSpawnPoints("Fungop", scale);
-            Array<Rectangle> fireSpawns = loadSpawnPoints("Fire", scale);
-            Array<Rectangle> bossSpawns = loadSpawnPoints("Boss", scale);
+    currentState = GameState.RUNNING;
+    upgradeWindow.remove(); 
+    upgradeWindow = null;
 
-            if (playerSpawns.size > 0) {
-                Rectangle spawn = playerSpawns.first();
-                playerSpawnPoint = spawn;
+    // 🔸 Restaurar control del jugador
+    if (game.client != null) {
+        NetworkInputAdapter networkAdapter = new NetworkInputAdapter(
+            game.client,
+            Input.Keys.A,
+            Input.Keys.D,
+            Input.Keys.W,
+            Input.Keys.X,
+            Input.Keys.Z,
+            Input.Keys.S
+        );
+        Gdx.input.setInputProcessor(networkAdapter);
+    }
+
+    Gdx.app.log("GameScreen", "Menú de mejoras CERRADO. Juego reanudado.");
+}
+
+        private void loadEntities(float scale, FireAttackHUD existingHUD, boolean isSpawnHall) {
+
+            
+                //Rectangle spawn = playerSpawns.first();
+                //playerSpawnPoint = spawn;
                 
                 myPlayer = new Player(game, game.playerData);
                 myPlayer.setCurrentAnimation(PlayerAnimationType.IDLE_RIGHT);
-                myPlayer.setPosition(spawn.x, spawn.y);
+                //myPlayer.setPosition(spawn.x, spawn.y);
                 myPlayer.setCollisionObjects(collisionObjects);
                 hudElements = new Array<>();
 
@@ -294,49 +377,19 @@ private float pendingLevelChangeTimer = 0f;
                 GameContext.setPlayer(myPlayer);
 
                 FireAttackHUD fireHUD = new FireAttackHUD();
-                FireAttackHUD fireHUD2 = new FireAttackHUD();
                 myPlayer.setFireAttackHUD(fireHUD); 
                 hudElements.add(fireHUD);
 
-                CoinHUD coinHUD1 = new CoinHUD(game.playerData, coinTexture, hudFont);
+                CoinHUD coinHUD1 = new CoinHUD(game.playerData, Assets.coinTexture, hudFont);
                 hudElements.add(coinHUD1);
                 GameContext.addPlayer(myPlayer); 
-            }
-
-            for (Rectangle spawn : bolbSpawns) {
-                Enemy bolb = new Bolb(collisionObjects);
-                bolb.setPosition(spawn.x, spawn.y);
-                enemies.add(bolb);
-                entities.add(bolb);
-            }
-
-            for (Rectangle spawn : slopSpawns) {
-                Enemy slop = new Slop(collisionObjects);
-                slop.setPosition(spawn.x, spawn.y);
-                enemies.add(slop);
-                entities.add(slop);
-            }
-
-            for (Rectangle spawn : fungopSpawns) {
-                Enemy fungop = new Fungop(collisionObjects);
-                fungop.setPosition(spawn.x, spawn.y);
-                enemies.add(fungop);
-                entities.add(fungop);
-            }
-
-            for (Rectangle spawn : bossSpawns) {
-                Boss boss = new Boss(collisionObjects);
-                boss.setPosition(spawn.x, spawn.y);
-                enemies.add(boss);
-                entities.add(boss);
-            }
-
-            for (Rectangle spawn : fireSpawns) {
-            Fire fire = new Fire(spawn.x, spawn.y);
-            entities.add(fire);
+            
         }
-        }
-
+public void refreshUpgradeWindow() {
+    if (upgradeWindow != null) {
+        upgradeWindow.updateButtons();
+    }
+}
 
         private void loadCollisionObjects(float scale) {
             MapLayer collisionLayer = map.getLayers().get("Capa de Objetos 1");
@@ -378,9 +431,10 @@ private void updateEntities(float delta) {
                 }
                 
             }
-            if (e instanceof CharacterEntity<?>) {
+            /*if (e instanceof CharacterEntity<?>) {
                 ((CharacterEntity<?>) e).updateDamageCooldown(delta); 
-            }
+            }*/
+           /*
             if (e instanceof Entity && ((Entity) e).isReadyForRemoval()) {
                 
                 if (e == myPlayer) {
@@ -393,32 +447,11 @@ private void updateEntities(float delta) {
                     enemies.removeValue((Enemy) e, true);
                 }
                 continue; 
-            }
+            }*/
             e.update(delta);
             if (e instanceof Coin) {
                 Coin coin = (Coin) e;
-                if (coin.getTarget() == null) {
-                    Player closestPlayer = null;
-                    float minDistance = Float.MAX_VALUE;
-                    Vector2 coinCenter = coin.getCenter();
-                    
-                    if (myPlayer != null && !myPlayer.isDead()) {
-                        float dist = myPlayer.getCenter().dst(coinCenter);
-                        minDistance = dist;
-                        closestPlayer = myPlayer;
-                    }
-
-                    for (Player remotePlayer : remotePlayers.values()) {
-                        if (remotePlayer != null && !remotePlayer.isDead()) {
-                            float dist = remotePlayer.getCenter().dst(coinCenter);
-                            if (dist < minDistance) {
-                                minDistance = dist;
-                                closestPlayer = remotePlayer;
-                            }
-                        }
-                    }
-                    coin.setTarget(closestPlayer);
-                }
+                coin.update(delta);
             }
         } 
         for (BaseHUD hud : hudElements) {
@@ -426,6 +459,20 @@ private void updateEntities(float delta) {
         }
     }
 
+    public Boss getBoss() {
+        
+            for (int i = entities.size - 1; i >= 0; i--) {
+                Entity e = entities.get(i);
+                if (e instanceof Boss) {
+                    Boss boss = (Boss) e;
+                    return boss; // ✅ seguro
+                }
+            }
+
+        
+        return null;
+    }
+/*
         private void checkEntityDamage() {
             for (int i = 0; i < entities.size; i++) {
                 Entity attacker = entities.get(i);
@@ -440,7 +487,7 @@ private void updateEntities(float delta) {
 
                     if (damageBox.overlaps(target.getCollisionBox())) {                    
                         if (attacker instanceof Player && target instanceof Fire ) {
-                            openUpgradeMenu();
+                            //openUpgradeMenu();
                         } else {
                             if (target instanceof CharacterEntity) {
                                 ((CharacterEntity) target).receiveDamage(attacker);
@@ -450,7 +497,8 @@ private void updateEntities(float delta) {
                 }
             }
         }
-
+*/
+/*
         private Array<Rectangle> loadSpawnPoints(String layerName, float scale) {
         Array<Rectangle> spawnPoints = new Array<>();
         MapLayer layer = map.getLayers().get(layerName);
@@ -471,14 +519,7 @@ private void updateEntities(float delta) {
         }
         return spawnPoints;
     }
-
-    public void createImpactEffect(float x, float y) {
-            if (groundImpactEffectTemplate == null) return;
-            ParticleEffect effect = new ParticleEffect(groundImpactEffectTemplate);
-            effect.setPosition(x, y);
-            effect.start();
-            activeEffects.add(effect);
-        }
+*/
 
     @Override
         public void render(float delta) {
@@ -494,13 +535,16 @@ private void updateEntities(float delta) {
                 return;
             }
 
-            if (myPlayerId == -1) { // ¿Todavía no sé quién soy?
+            if (myPlayerId == -1 || GameContext.getMyPlayerId() == -1) { // ¿Todavía no sé quién soy?
                 int id = game.client.getPlayerId(); // Pregúntale al hilo de red
                 
                 if (id != -1) { // ¿El hilo ya tiene un ID?
                     System.out.println("[GameScreen] ¡Mi ID ha sido asignado: " + id + "!");
+                    GameContext.setMyPlayerId(id);
                     this.myPlayerId = id;
                 }
+            }else {
+                myPlayerId = GameContext.getMyPlayerId();
             }
             if (pendingLevelChange) {
             // OPCIONAL: asegurarse unos frames si querés debuggear
@@ -633,6 +677,9 @@ private void updateEntities(float delta) {
         @Override
         public void resize(int width, int height) {
             viewport.update(width, height);
+            if (upgradeWindow != null) {
+                upgradeWindow.resize(width, height);
+            }
             uiStage.getViewport().update(width, height, true);
         }
 
@@ -654,14 +701,10 @@ private void updateEntities(float delta) {
             map.dispose();
             mapRenderer.dispose();
             collisionObjects.clear();
-            if (groundImpactEffectTemplate != null) {
-                groundImpactEffectTemplate.dispose();
-            }
             for (ParticleEffect effect : activeEffects) {
                 effect.dispose();
             }
             hudFont.dispose();
-            coinTexture.dispose();
             uiStage.dispose();
             whitePixelTexture.dispose();
             uiSkin.dispose();

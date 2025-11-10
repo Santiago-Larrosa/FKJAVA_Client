@@ -56,6 +56,7 @@ public class Player extends CharacterEntity<Player> {
         super(2000, FLOOR_Y, WIDTH, HEIGHT, 100, 100); 
         setHealth(5);
         this.playerData = playerData;  
+        this.entityType = EntityTypeMessage.PLAYER;
         this.game = game;
         this.fireCooldown = FIRE_ATTACK_COOLDOWN;
         setDamage(3);
@@ -86,6 +87,8 @@ public class Player extends CharacterEntity<Player> {
         collisionBox.setPosition(bounds.x + collisionOffsetX, bounds.y + collisionOffsetY);
         debugPlatformDetection();
     }
+
+    
     @Override
     public AnimationType getDeathAnimationType() {
         return PlayerAnimationType.SMOKE;
@@ -115,19 +118,12 @@ public class Player extends CharacterEntity<Player> {
         return stateMachine;
     }
 
- 
+ public void updateFireCondition (boolean charged) {
+        this.isFireCharged = charged;
+    }
 
 public void updateFireCooldown(float delta) {
-        if (fireCooldown > 0) {
-            fireCooldown -= delta;
-            if (fireCooldown < 0) {
-                fireCooldown = 0;
-                isFireCharged = true;
-            }
-            
-            
-        }
-        fireAttackHUD.updateFire(delta, isFireCharged);
+        //fireAttackHUD.updateFire(delta, isFireCharged);
     }
 
     public void setIsFireCharged(boolean charged) {
@@ -151,6 +147,9 @@ public void updateFireCooldown(float delta) {
         this.isFireCharged = false;
     }
 
+    public boolean isFireCharged() {
+        return isFireCharged;
+    }
 
     public PlayerAnimationType getCurrentAnimationType() {
         return currentType;
@@ -253,39 +252,30 @@ public void setCurrentAnimation(AnimationType animType) {
  * Recibe el estado "real" desde el servidor y fuerza a la máquina de estados
  * VISUAL del cliente a sincronizarse, cambiando la animación.
  */
+@Override
 public void setVisualStateFromServer(String networkState, String networkFacing) {
     
-    // 1. Convertir los strings de red a Enums
+   
     StateMessage newState;
     FacingDirection newFacing;
 
     try {
-        // valueOf() convierte un string (ej: "PLAYER_IDLE") en el enum (StateMessage.PLAYER_IDLE)
+        
         newState = StateMessage.valueOf(networkState);
-        newFacing = FacingDirection.valueOf(networkFacing); // Asumiendo que tienes un enum para esto
+        newFacing = FacingDirection.valueOf(networkFacing); 
     } catch (IllegalArgumentException e) {
-        // El servidor envió un estado/dirección que no existe en nuestro enum
         System.err.println("Estado o dirección de red desconocido: " + networkState + ", " + networkFacing);
         return;
     }
 
-    // 2. Actualizar la dirección (para saber si voltear el sprite)
-    // (Ajusta 'isMovingRight' al nombre de tu variable interna para la dirección)
     this.movingRight = (newFacing == FacingDirection.RIGHT);
 
-    // 3. Obtener el estado visual actual
-    // (Usamos el método que creamos en el 'core' para esto)
     StateMessage currentStateEnum = stateMachine.getCurrentState().getNetworkState();
     
-    // 4. Si el estado ya es el correcto, no hacer nada.
-    // (Esto evita reiniciar la animación en cada paquete)
     if (currentStateEnum == newState) {
         return; 
     }
 
-    // 5. El estado es DIFERENTE. Forzar el cambio de estado.
-    // (Esto llamará al método 'enter()' del nuevo estado, que
-    // es donde se debe configurar la nueva animación).
     switch (newState) {
         case PLAYER_IDLE:
             stateMachine.changeState(new IdleState());
@@ -311,6 +301,12 @@ public void setVisualStateFromServer(String networkState, String networkFacing) 
         case PLAYER_FALLING_AND_ATTACKING:
             stateMachine.changeState(new FallingAttackState());
             break;  
+        case  DYING:
+            stateMachine.changeState(new DeathState());
+            break;
+        case GETTING_DAMMAGE:
+            stateMachine.changeState(new DamageState());;
+            break;
     }
 }
 }

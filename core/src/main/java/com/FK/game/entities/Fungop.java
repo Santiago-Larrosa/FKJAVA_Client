@@ -9,6 +9,7 @@ import com.FK.game.entities.*;
 import com.FK.game.states.*;
 import com.FK.game.animations.*;
 import com.FK.game.core.GameContext;
+import com.FK.game.network.*;
 
 public class Fungop extends Enemy {
    
@@ -18,6 +19,7 @@ public class Fungop extends Enemy {
         setDamage(2);
         setKnockbackX(200f);
         this.attackRange = 200f;
+        this.entityType = EntityTypeMessage.FUNGOP;
         setKnockbackY(400f);
         this.maxHealth = 10; 
         this.health = this.maxHealth; 
@@ -30,7 +32,18 @@ public class Fungop extends Enemy {
     }
     
     
-  
+  @Override
+    public void update(float delta) {
+        if (!movementLocked) {
+            stateMachine.update(delta);
+        }
+        float newX = lerp(bounds.x, targetX, delta * lerpSpeed);
+        float newY = lerp(bounds.y, targetY, delta * lerpSpeed);
+        bounds.setPosition(newX, newY);
+        collisionBox.setPosition(bounds.x + collisionOffsetX, bounds.y + collisionOffsetY);
+        debugPlatformDetection();
+    }
+
 
     @Override
     public void updatePlayerDetection() {
@@ -74,4 +87,44 @@ public AnimationType getDamageAnimationType() {
     public String toString() {
         return "Fungop";
     }
+
+        @Override
+public void setVisualStateFromServer(String networkState, String networkFacing) {
+    
+   
+    StateMessage newState;
+    FacingDirection newFacing;
+
+    try {
+        
+        newState = StateMessage.valueOf(networkState);
+        newFacing = FacingDirection.valueOf(networkFacing); 
+    } catch (IllegalArgumentException e) {
+        System.err.println("Estado o dirección de red desconocido: " + networkState + ", " + networkFacing);
+        return;
+    }
+
+    this.movingRight = (newFacing == FacingDirection.RIGHT);
+
+    StateMessage currentStateEnum = stateMachine.getCurrentState().getNetworkState();
+    
+    if (currentStateEnum == newState) {
+        return; 
+    }
+
+    switch (newState) {
+        case FUNGOP_FLIYING:
+            stateMachine.changeState(new FungoFlyingState());
+            break;
+        case FUNGOP_ATTACKING:
+            stateMachine.changeState(new FungopDiveAttackState());
+            break;
+        case  DYING:
+            stateMachine.changeState(new DeathState());
+            break;
+        case GETTING_DAMMAGE:
+            stateMachine.changeState(new DamageState());;
+            break;
+    }
+}
 }

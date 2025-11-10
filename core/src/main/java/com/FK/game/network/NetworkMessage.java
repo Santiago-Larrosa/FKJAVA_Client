@@ -2,9 +2,8 @@ package com.FK.game.network;
 import java.io.IOException;
 
     public enum NetworkMessage {
-        // Cliente → Servidor
-        CONNECT,           // Solicita conexión al servidor
-        DISCONNECT,        // Cliente se desconecta
+        CONNECT,           
+        DISCONNECT,       
         INPUT_LEFT,
         STOP_LEFT,
         INPUT_RIGHT,
@@ -14,14 +13,14 @@ import java.io.IOException;
         INPUT_ATTACK,
         STOP_ATTACK,
         INPUT_FIRE_ATTACK,
-        INPUT_DOWN,// Ataque especial
-        PING,              // Para test de latencia
-
-        // Servidor → Cliente
-        CONNECTED,         // Confirmación de conexión
-        ENTITY_UPDATE,     // Posiciones/estados de jugadores y enemigos
-        COIN_UPDATE,       // Actualización de monedas recogidas
-        PORTAL_SPAWNED,    // Portal creado en la sala
-        GAME_OVER,         // Cuando el jugador muere o termina la partida
-        PONG;              // Respuesta a PING
+        STOP_FIRE_ATTACK,
+        INPUT_DOWN,
+        STOP_DOWN,
+        PING,             
+        CONNECTED,        
+        ENTITY_UPDATE,    
+        COIN_UPDATE,       
+        PORTAL_SPAWNED,   
+        GAME_OVER,        
+        PONG;            
     }

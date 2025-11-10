@@ -39,6 +39,7 @@ public class NetworkInputAdapter extends InputAdapter {
             client.sendNetworkInput(NetworkMessage.INPUT_JUMP);
             return true;
         } else if (keycode == keyAttack) {
+            System.out.println("Sending ATTACK input");
             client.sendNetworkInput(NetworkMessage.INPUT_ATTACK);
             return true;
         } else if (keycode == keyFireAttack) {
@@ -65,7 +66,14 @@ public class NetworkInputAdapter extends InputAdapter {
             client.sendNetworkInput(NetworkMessage.STOP_JUMP);
             return true;
         }else if (keycode == keyAttack) {
+            System.out.println("Sending STOP_ATTACK input");
             client.sendNetworkInput(NetworkMessage.STOP_ATTACK);
+            return true;
+        }else if(keycode == keyFireAttack) {
+            client.sendNetworkInput(NetworkMessage.STOP_FIRE_ATTACK);
+            return true;
+        } else if (keycode == keyDown) {
+            client.sendNetworkInput(NetworkMessage.STOP_DOWN);
             return true;
         }
 

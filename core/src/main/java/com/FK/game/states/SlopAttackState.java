@@ -31,11 +31,11 @@ public class SlopAttackState implements EntityState<Enemy> {
     @Override
     public void update(Enemy enemy, float delta) {
         Slop Slop = (Slop) enemy;
-        attackTimer += delta;
+       // attackTimer += delta;
 
         if(Slop.getCurrentAnimation() != null) {
         Slop.getCurrentAnimation().update(delta);
-    }
+    }/*
 
         Player player = GameContext.getPlayer();
 
@@ -50,7 +50,7 @@ public class SlopAttackState implements EntityState<Enemy> {
         if (attackTimer >= ATTACK_DURATION) {
             Slop.getDamageBox().set(0, 0, 0, 0);
             Slop.getStateMachine().changeState(new SlopWalkState());
-        }
+        }*/
     }
 
     @Override

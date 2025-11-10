@@ -14,6 +14,7 @@ import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
 import com.FK.game.sounds.*;
+import com.FK.game.network.*;
 
 public class Fire extends Entity <Fire>{
     protected AnimationHandler[] animations;
@@ -23,6 +24,7 @@ public class Fire extends Entity <Fire>{
         super(x, y, 400, 400f, 200f, 200f);
         setDamageSize(150, 150);
         setDamage(0);
+        this.entityType = EntityTypeMessage.FIRE;
         setKnockbackX(100f);
         setKnockbackY(200f);
         initializeAnimations();
@@ -34,9 +36,17 @@ public class Fire extends Entity <Fire>{
         return stateMachine;
     }
 
+
     @Override
     public void update(float delta) {
-        stateMachine.update(delta);
+        if (!movementLocked) {
+            stateMachine.update(delta);
+        }
+        float newX = lerp(bounds.x, targetX, delta * lerpSpeed);
+        float newY = lerp(bounds.y, targetY, delta * lerpSpeed);
+        bounds.setPosition(newX, newY);
+        collisionBox.setPosition(bounds.x + collisionOffsetX, bounds.y + collisionOffsetY);
+        debugPlatformDetection();
     }
 
      public void setAnimation(ObjectsAnimationType type) {
@@ -71,4 +81,35 @@ public class Fire extends Entity <Fire>{
     public void render(com.badlogic.gdx.graphics.g2d.Batch batch) {
         stateMachine.render(batch);
     }
+
+        @Override
+public void setVisualStateFromServer(String networkState, String networkFacing) {
+    
+   
+    StateMessage newState;
+    FacingDirection newFacing;
+
+    try {
+        
+        newState = StateMessage.valueOf(networkState);
+        newFacing = FacingDirection.valueOf(networkFacing); 
+    } catch (IllegalArgumentException e) {
+        System.err.println("Estado o dirección de red desconocido: " + networkState + ", " + networkFacing);
+        return;
+    }
+
+    this.movingRight = (newFacing == FacingDirection.RIGHT);
+
+    StateMessage currentStateEnum = stateMachine.getCurrentState().getNetworkState();
+    
+    if (currentStateEnum == newState) {
+        return; 
+    }
+
+    switch (newState) {
+        case FIRE:
+            stateMachine.changeState(new FireBasicState());
+            break;
+    }
+}
 }

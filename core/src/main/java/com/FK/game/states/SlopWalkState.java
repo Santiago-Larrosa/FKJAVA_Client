@@ -34,7 +34,8 @@ public class SlopWalkState implements EntityState<Enemy> {
     public void update(Enemy enemy, float delta) {
         Slop slop = (Slop) enemy;
         slop.getCurrentAnimation().update(delta);
-        
+        slop.setCurrentAnimation(slop.isMovingRight() ? EnemyAnimationType.SLOP : EnemyAnimationType.SLOP_LEFT);
+        /*
         // --- NUEVA LÓGICA DE ATAQUE (SIMPLE Y LIMPIA) ---
         // Primero, comprobamos si debemos atacar.
         if (enemy.isPlayerInRange() && enemy.canAttack()) {
@@ -50,7 +51,7 @@ public class SlopWalkState implements EntityState<Enemy> {
                 waitTimer = 0f;
                 slop.setMovingRight(!slop.isMovingRight());
                 edgeDetected = true;
-                slop.setCurrentAnimation(slop.isMovingRight() ? EnemyAnimationType.SLOP : EnemyAnimationType.SLOP_LEFT);
+                
             }
             return; // Mientras espera para girar, no hace nada más.
         }
@@ -75,7 +76,7 @@ public class SlopWalkState implements EntityState<Enemy> {
         slop.getCollisionBox().setPosition(
             slop.getBounds().x + slop.getCollisionBoxOffsetX(),
             slop.getBounds().y + slop.getCollisionBoxOffsetY()
-        );
+        );*/
     }
 
     @Override
@@ -95,7 +96,7 @@ public class SlopWalkState implements EntityState<Enemy> {
     public void exit(Enemy enemy) {}
 
     private boolean isWallAhead(Slop slop) {
-        float checkX = slop.isMovingRight()
+      /*  float checkX = slop.isMovingRight()
             ? slop.getCollisionBox().x + slop.getCollisionBox().width + 1
             : slop.getCollisionBox().x - 1;
 
@@ -106,7 +107,7 @@ public class SlopWalkState implements EntityState<Enemy> {
 
         for (Rectangle platform : slop.getCollisionObjects()) {
             if (checkArea.overlaps(platform)) return true;
-        }
+        }*/
 
         return false;
     }
@@ -117,6 +118,7 @@ public class SlopWalkState implements EntityState<Enemy> {
     }
 
     private boolean hasGroundAhead(Slop slop) {
+        /*
     float checkX = slop.isMovingRight() 
         ? slop.getCollisionBox().x + slop.getCollisionBox().width + 5 
         : slop.getCollisionBox().x - 5;
@@ -130,7 +132,8 @@ public class SlopWalkState implements EntityState<Enemy> {
     
     for (Rectangle platform : slop.getCollisionObjects()) {
         if (checkArea.overlaps(platform)) return true;
-    }
-    return false;
+    }*/
+        return false;
+        
 }
 }

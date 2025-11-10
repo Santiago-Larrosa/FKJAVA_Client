@@ -33,8 +33,12 @@ public class LoadingScreen implements Screen {
     @Override
     public void show() {
         shapeRenderer = new ShapeRenderer();
-    AnimationCache.getInstance().loadAssets();
-    SoundCache.getInstance().loadAll();
+        Assets.load(); 
+        Assets.manager.finishLoading();
+        Assets.assignTextures();
+        UIAssets.load();
+        AnimationCache.getInstance().loadAssets();
+        SoundCache.getInstance().loadAll();
     }
 
     @Override

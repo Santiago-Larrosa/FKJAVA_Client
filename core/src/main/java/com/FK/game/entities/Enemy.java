@@ -63,7 +63,9 @@ public abstract class Enemy extends CharacterEntity<Enemy> {
         stateMachine.render(batch);
     }
     
-    
+    @Override
+    public void setVisualStateFromServer(String networkState, String networkFacing) {
+    }
 
     @Override
     public EntityState<Enemy> getDefaultState() {

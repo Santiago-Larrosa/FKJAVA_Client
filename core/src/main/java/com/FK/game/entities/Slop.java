@@ -13,6 +13,7 @@ import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
 import com.FK.game.sounds.*;
+import com.FK.game.network.*;
 
 import java.util.Random;
 public class Slop extends Enemy {
@@ -23,6 +24,7 @@ public class Slop extends Enemy {
         setCurrentAnimation(EnemyAnimationType.SLOP);
         this.maxHealth = 3; 
         this.attackRange = 50f;
+        this.entityType = EntityTypeMessage.SLOP;   
         this.health = this.maxHealth; 
         setKnockbackX(100f);
         setKnockbackY(200f);
@@ -31,7 +33,18 @@ public class Slop extends Enemy {
         initStateMachine();
         spawnOnRandomPlatform();
     }
-   
+    @Override
+    public void update(float delta) {
+        if (!movementLocked) {
+            stateMachine.update(delta);
+        }
+        float newX = lerp(bounds.x, targetX, delta * lerpSpeed);
+        float newY = lerp(bounds.y, targetY, delta * lerpSpeed);
+        bounds.setPosition(newX, newY);
+        collisionBox.setPosition(bounds.x + collisionOffsetX, bounds.y + collisionOffsetY);
+        debugPlatformDetection();
+    }
+
 @Override
     public void updatePlayerDetection() {
         // Por defecto, asumimos que no hay nadie en rango
@@ -63,4 +76,44 @@ public AnimationType getDamageAnimationType() {
     public String toString() {
         return "Slop";
     }
+
+        @Override
+public void setVisualStateFromServer(String networkState, String networkFacing) {
+    
+   
+    StateMessage newState;
+    FacingDirection newFacing;
+
+    try {
+        
+        newState = StateMessage.valueOf(networkState);
+        newFacing = FacingDirection.valueOf(networkFacing); 
+    } catch (IllegalArgumentException e) {
+        System.err.println("Estado o dirección de red desconocido: " + networkState + ", " + networkFacing);
+        return;
+    }
+
+    this.movingRight = (newFacing == FacingDirection.RIGHT);
+
+    StateMessage currentStateEnum = stateMachine.getCurrentState().getNetworkState();
+    
+    if (currentStateEnum == newState) {
+        return; 
+    }
+
+    switch (newState) {
+        case SLOP_WALKING:
+            stateMachine.changeState(new SlopWalkState());
+            break;
+        case SLOP_ATTACKING:
+            stateMachine.changeState(new SlopAttackState());
+            break;
+        case  DYING:
+            stateMachine.changeState(new DeathState());
+            break;
+        case GETTING_DAMMAGE:
+            stateMachine.changeState(new DamageState());;
+            break;
+    }
+}
 }

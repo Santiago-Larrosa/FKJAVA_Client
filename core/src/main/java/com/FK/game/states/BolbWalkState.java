@@ -33,8 +33,8 @@ public class BolbWalkState implements EntityState<Enemy> {
     public void update(Enemy enemy, float delta) {
         Bolb bolb = (Bolb) enemy;
         bolb.getCurrentAnimation().update(delta);
-
-        if (waitingToTurn) {
+        bolb.setAnimation(bolb.isMovingRight() ? EnemyAnimationType.BOLB : EnemyAnimationType.BOLB_LEFT);
+        /*if (waitingToTurn) {
             waitTimer += delta;
             if (waitTimer >= waitDuration) {
                 waitingToTurn = false;
@@ -42,7 +42,7 @@ public class BolbWalkState implements EntityState<Enemy> {
                 bolb.setMovingRight(!bolb.isMovingRight());
                 edgeDetected = true;
 
-                bolb.setAnimation(bolb.isMovingRight() ? EnemyAnimationType.BOLB : EnemyAnimationType.BOLB_LEFT);
+                
             }
             return;
         }
@@ -78,7 +78,7 @@ public class BolbWalkState implements EntityState<Enemy> {
             return; // Cambiamos de estado, no necesitamos hacer más nada aquí
         }
 
-
+*/
         
     }
 
@@ -99,7 +99,7 @@ public class BolbWalkState implements EntityState<Enemy> {
     public void exit(Enemy enemy) {}
 
     private boolean isWallAhead(Bolb bolb) {
-        float checkX = bolb.isMovingRight()
+      /*  float checkX = bolb.isMovingRight()
             ? bolb.getCollisionBox().x + bolb.getCollisionBox().width + 1
             : bolb.getCollisionBox().x - 1;
 
@@ -111,13 +111,13 @@ public class BolbWalkState implements EntityState<Enemy> {
         for (Rectangle platform : bolb.getCollisionObjects()) {
             if (checkArea.overlaps(platform)) return true;
         }
-
+*/
         return false;
     }
 
 
     private boolean hasGroundAhead(Bolb bolb) {
-    float checkX = bolb.isMovingRight() 
+   /* float checkX = bolb.isMovingRight() 
         ? bolb.getCollisionBox().x + bolb.getCollisionBox().width + 5 
         : bolb.getCollisionBox().x - 5;
     
@@ -130,7 +130,7 @@ public class BolbWalkState implements EntityState<Enemy> {
     
     for (Rectangle platform : bolb.getCollisionObjects()) {
         if (checkArea.overlaps(platform)) return true;
-    }
+    }*/
     return false;
 }
 

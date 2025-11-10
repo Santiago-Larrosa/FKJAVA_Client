@@ -61,14 +61,14 @@ public class FungopDiveAttackState implements EntityState<Enemy> {
             if (diff > 180) diff -= 360;
             if (diff < -180) diff += 360;
             
-            currentRotation = startAngle + diff * progress;
+            //currentRotation = startAngle + diff * progress;
 
             if (passTimer >= PASS_ANIMATION_DURATION) {
                 passAnimationFinished = true;
-                currentRotation = targetAngle; 
+              //  currentRotation = targetAngle; 
                 fungo.setCurrentAnimation(EnemyAnimationType.FUNGOP_ATTACK);
             }
-        } else {
+        } else {/*
             fungo.getVelocity().set(trajectory).scl(ATTACK_SPEED);
             fungo.getBounds().x += fungo.getVelocity().x * delta;
             fungo.getBounds().y += fungo.getVelocity().y * delta;
@@ -85,16 +85,16 @@ public class FungopDiveAttackState implements EntityState<Enemy> {
                 fungo.getStateMachine().changeState(new FungoFlyingState());
             }else {
                 fungo.getDamageBox().set(fungo.getX(), fungo.getY(), 120, 150);
-            }
+            }*/
         }
-        
+       
     }
 
     @Override
     public void render(Enemy fungo, Batch batch) {
         TextureRegion frame = fungo.getCurrentAnimation().getCurrentFrame();
         batch.draw(frame, fungo.getX(), fungo.getY(), fungo.getWidth() / 2f, fungo.getHeight() / 2f,
-                   fungo.getWidth(), fungo.getHeight(), 1f, 1f, currentRotation);
+                   fungo.getWidth(), fungo.getHeight(), 1f, 1f, fungo.getRotation());
     }
 
     @Override

@@ -28,9 +28,9 @@ public class BolbAttackState implements EntityState<Enemy> {
 
     @Override
     public void update(Enemy enemy, float delta) {
-        Bolb bolb = (Bolb) enemy;
-        attackTimer += delta;
-        Player player = GameContext.getPlayer();
+        //Bolb bolb = (Bolb) enemy;
+        //attackTimer += delta;
+        /*Player player = GameContext.getPlayer();
 
         if (player != null) {
             if (player.getBounds().x < bolb.getBounds().x) {
@@ -43,7 +43,7 @@ public class BolbAttackState implements EntityState<Enemy> {
         if (attackTimer >= ATTACK_DURATION) {
             bolb.getDamageBox().set(0, 0, 0, 0);
             bolb.getStateMachine().changeState(new BolbWalkState());
-        }
+        }*/
     }
 
     @Override

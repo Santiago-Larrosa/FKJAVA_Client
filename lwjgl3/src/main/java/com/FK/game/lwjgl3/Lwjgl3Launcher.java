@@ -3,6 +3,9 @@ package com.FK.game.lwjgl3;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.FK.game.core.MainGame;
+import com.FK.game.core.GameContext;
+import com.FK.game.network.ClientThread;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3WindowAdapter;
 
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
@@ -11,6 +14,19 @@ public class Lwjgl3Launcher {
     }
 
     private static Lwjgl3Application createApplication() {
+        Lwjgl3ApplicationConfiguration config = getDefaultConfiguration();
+
+        config.setWindowListener(new Lwjgl3WindowAdapter() {
+            @Override
+            public boolean closeRequested() {
+                System.out.println("[HOOK] Ventana cerrada — ejecutando limpieza manual.");
+                ClientThread client = GameContext.getScreen().getGame().client;
+                client.sendDisconnectMessage();
+                MainGame.onWindowClosed();
+                System.exit(0);
+                return true; // permite el cierre
+            }
+        });
         return new Lwjgl3Application(new MainGame(), getDefaultConfiguration());
     }
 

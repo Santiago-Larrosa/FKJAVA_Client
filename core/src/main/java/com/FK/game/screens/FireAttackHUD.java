@@ -24,7 +24,8 @@ public class FireAttackHUD extends BaseHUD{
     private AnimationHandler loadedAnim;
     private AnimationHandler currentAnim;
     private AnimationHandler unloadingAnim;
-    
+    final float HUD_WIDTH = 100f;
+    final float HUD_HEIGHT = 100f;
     private enum HUDState { UNLOADED, TRANSITION_TO_LOADED, LOADED, TRANSITION_TO_UNLOADED }
     private HUDState state = HUDState.UNLOADED;
     private float stateTime = 0f;
@@ -81,6 +82,31 @@ public class FireAttackHUD extends BaseHUD{
         }
     }
 
+    public void setFireReady(boolean ready) {
+    if (ready) {
+        changeState(HUDState.TRANSITION_TO_LOADED, loadingAnim);
+    } else {
+        changeState(HUDState.TRANSITION_TO_UNLOADED, unloadingAnim);
+    }
+}
+
+
+public void setNetworkState(String stateName, float time) {
+    try {
+        HUDState newState = HUDState.valueOf(stateName);
+        if (newState != state) {
+            switch (newState) {
+                case UNLOADED -> changeState(HUDState.UNLOADED, unloadedAnim);
+                case TRANSITION_TO_LOADED -> changeState(HUDState.TRANSITION_TO_LOADED, loadingAnim);
+                case LOADED -> changeState(HUDState.LOADED, loadedAnim);
+                case TRANSITION_TO_UNLOADED -> changeState(HUDState.TRANSITION_TO_UNLOADED, unloadingAnim);
+            }
+        }
+        this.stateTime = time;
+    } catch (Exception e) {
+        System.err.println("[HUD] Estado recibido inválido: " + stateName);
+    }
+}
 
     private void changeState(HUDState newState, AnimationHandler newAnim) {
         state = newState;
@@ -101,8 +127,8 @@ public class FireAttackHUD extends BaseHUD{
         TextureRegion frame = currentAnim.getCurrentFrame();
         if (frame == null || frame.getTexture() == null) return;
 
-        this.width = frame.getRegionWidth() * scale;
-        this.height = frame.getRegionHeight() * scale;
+        this.width = HUD_WIDTH;
+        this.height = HUD_HEIGHT;
 
         calculatePosition(camera, 20f, 20f, true, true);
 

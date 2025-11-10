@@ -23,14 +23,14 @@ public class DeathState implements EntityState<CharacterEntity> {
     @Override
     public void update(CharacterEntity character, float delta) {
      character.getCurrentAnimation().update(delta);
-     Gdx.app.log("DeathState", character + " stateTime=" + character.getCurrentAnimation().getCurrentFrameIndex() + 
+     /*Gdx.app.log("DeathState", character + " stateTime=" + character.getCurrentAnimation().getCurrentFrameIndex() + 
              " finished=" + character.getCurrentAnimation().isFinished());
 
 
         if (character.getCurrentAnimation().isFinished()) {
             Gdx.app.log("YA SE PUEDE MORIR", "El enemigo ya se puede morir");
             character.setReadyForRemoval(true);
-        }
+        }*/
     }
 
     @Override

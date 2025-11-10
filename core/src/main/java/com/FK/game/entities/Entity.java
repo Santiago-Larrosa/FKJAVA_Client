@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.FK.game.animations.AnimationHandler;
 import com.FK.game.states.*;
+import com.FK.game.network.*;
 
 public abstract class Entity<T extends Entity<T>> {
     protected Rectangle bounds;
@@ -19,6 +20,7 @@ public abstract class Entity<T extends Entity<T>> {
     protected boolean onGround = true;
     protected boolean onPlatform = false;
     protected float gravity = -600;
+    private int networkId = -1;
     protected boolean movementLocked = false;
     protected boolean movingRight = true;
     protected Rectangle collisionBox;
@@ -37,6 +39,8 @@ public abstract class Entity<T extends Entity<T>> {
     private boolean hasWallAhead;
     protected float targetX, targetY;
     protected float lerpSpeed = 30f;
+    protected EntityTypeMessage entityType = EntityTypeMessage.ENTITY;
+    protected float rotation = 0f;
 
     public Entity(float x, float y, float width, float height, float CollisionBoxWidth, float colisionBoxHeight) {
         bounds = new Rectangle(x, y, width, height);
@@ -48,12 +52,11 @@ public abstract class Entity<T extends Entity<T>> {
     }
 
     public void update(float delta) {
-        applyPhysics(delta);
-        bounds.x += velocity.x * delta;
-        bounds.y += velocity.y * delta;
+        float newX = lerp(bounds.x, targetX, delta * lerpSpeed);
+        float newY = lerp(bounds.y, targetY, delta * lerpSpeed);
+        bounds.setPosition(newX, newY);
 
         collisionBox.setPosition(bounds.x + collisionOffsetX, bounds.y + collisionOffsetY);
-        debugPlatformDetection();
     }
 
     public void render(Batch batch) {
@@ -63,7 +66,7 @@ public abstract class Entity<T extends Entity<T>> {
         }
     }
 
-    
+    public abstract void setVisualStateFromServer(String networkState, String networkFacing);
 
     protected void applyPhysics(float delta) {
         if (!onGround) {
@@ -72,6 +75,15 @@ public abstract class Entity<T extends Entity<T>> {
     }
     public boolean isMovingRight() {
         return movingRight;
+    }
+
+
+    public void setNetworkId(int id) {
+        this.networkId = id;
+    }
+
+    public int getNetworkId() {
+        return networkId;
     }
 
     public void setTargetPosition(float x, float y) {
@@ -117,7 +129,9 @@ public abstract class Entity<T extends Entity<T>> {
             }
         }
     }
-
+public float getRotation() { return rotation; }
+public void setRotation(float rotation) { this.rotation = rotation; }
+public boolean hasRotation() { return true; }
     
 
     public void renderDebug(ShapeRenderer renderer) {
@@ -319,6 +333,11 @@ public abstract class Entity<T extends Entity<T>> {
 
     public Rectangle getDamageBox() {
         return DamageBox;
+    }
+    
+
+    public String getTypeName () {
+        return entityType.toString();
     }
 
     public Vector2 getCenter() {

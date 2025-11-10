@@ -16,15 +16,11 @@ import com.FK.game.entities.Enemy;
 import com.FK.game.entities.Boss; 
 import com.FK.game.entities.Player;
 import com.FK.game.network.StateMessage;
+import com.FK.game.animations.EnemyAnimationType;
 
 public class BossLaserAttackState implements EntityState<Enemy> {
 
-    private enum Phase {
-        WARNING,  
-        CHARGING,  
-        FIRING,   
-        COOLDOWN   
-    }
+    
     private Phase currentPhase;
     private float damageCooldown = 0f;
     private static final float WARNING_DURATION = 1.5f;
@@ -35,14 +31,17 @@ public class BossLaserAttackState implements EntityState<Enemy> {
     private Vector2 targetPosition; 
     private float attackAngle;
     private Polygon damagePolygon;  
+    private Boss boss;  
 
     @Override
 public void enter(Enemy enemy) {
+    enemy.setAnimation(EnemyAnimationType.BOLB);
     currentPhase = Phase.WARNING;
     phaseTimer = 0f;
 
     // --- LÓGICA DE APUNTADO MEJORADA ---
-    Boss boss = (Boss) enemy;
+    boss = (Boss) enemy;
+
     Player target = boss.getCurrentTarget(); // Obtenemos el objetivo que el Jefe ya decidió
 
     if (target != null) {
@@ -54,15 +53,16 @@ public void enter(Enemy enemy) {
     }
 
     Vector2 bossCenter = new Vector2(enemy.getX() + enemy.getWidth() / 2, enemy.getY() + enemy.getHeight() / 2);
-    attackAngle = targetPosition.cpy().sub(bossCenter).angleDeg();
+    
 }
 
     @Override
     public void update(Enemy enemy, float delta) {
-        if (damageCooldown > 0) damageCooldown -= delta;
+       /* if (damageCooldown > 0) damageCooldown -= delta;*/
         phaseTimer += delta;
-
-        switch (currentPhase) {
+        currentPhase = boss.getLaserState();
+        attackAngle = boss.getLaserAngle();
+        /*switch (currentPhase) {
             case WARNING:
                 if (phaseTimer >= WARNING_DURATION) {
                     phaseTimer = 0;
@@ -80,20 +80,20 @@ public void enter(Enemy enemy) {
                 checkCollision(enemy);
                 if (phaseTimer >= FIRING_DURATION) {
                     phaseTimer = 0;
-                    currentPhase = Phase.COOLDOWN;
-                    damagePolygon = null; 
+                    //currentPhase = Phase.COOLDOWN;
+                    //damagePolygon = null; 
                 }
                 break;
             case COOLDOWN:
-                if (phaseTimer >= COOLDOWN_DURATION) {
+               /* if (phaseTimer >= COOLDOWN_DURATION) {
                     enemy.getStateMachine().changeState(new BossIdleState());
                 }
                 break;
-        }
+        }*/
     }
 
     private void createDamagePolygon(Enemy enemy) {
-        float beamLength = 2000f;
+       /* float beamLength = 2000f;
         float beamWidth = 20f;    
 
         Vector2 bossCenter = new Vector2(enemy.getX() + enemy.getWidth() / 2, enemy.getY() + enemy.getHeight() / 2);
@@ -105,11 +105,11 @@ public void enter(Enemy enemy) {
         });
         damagePolygon.setOrigin(0, 0);
         damagePolygon.setPosition(bossCenter.x, bossCenter.y);
-        damagePolygon.setRotation(attackAngle);
+        damagePolygon.setRotation(attackAngle);*/
     }
 
     private void checkCollision(Enemy enemy) {
-    if (damagePolygon == null) return;
+    /*if (damagePolygon == null) return;
 
     // Recorremos la lista de TODOS los jugadores activos
     for (Player player : GameContext.getActivePlayers()) {
@@ -132,7 +132,7 @@ public void enter(Enemy enemy) {
             // por lo que no necesitamos un temporizador de daño aquí.
             player.receiveDamage(enemy);
         }
-    }
+    }*/
 }
 
     public void renderWarning(ShapeRenderer renderer) {
@@ -172,6 +172,12 @@ public void enter(Enemy enemy) {
 
     @Override
     public void render(Enemy enemy, com.badlogic.gdx.graphics.g2d.Batch batch) {
+        Boss boss = (Boss) enemy;
+        if (boss.getCurrentAnimation() != null && boss.getCurrentAnimation().getCurrentFrame() != null) {
+            batch.draw(boss.getCurrentAnimation().getCurrentFrame(),
+                boss.getX(), boss.getY(),
+                boss.getWidth(), boss.getHeight());
+        }
     }
 
     @Override
@@ -179,7 +185,7 @@ public void enter(Enemy enemy) {
 
     @Override
     public StateMessage getNetworkState() {
-        return StateMessage.BOSS_LASER_ATTACK;
+        return StateMessage.BOSS_ATTACKING;
     }
 
     public float getAttackAngle() {

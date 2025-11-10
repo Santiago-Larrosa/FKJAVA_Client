@@ -14,6 +14,7 @@ import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
 import com.FK.game.sounds.*;
+import com.FK.game.network.*;
 
 public class Portal extends Entity <Portal>{
     private EntityStateMachine<Portal> stateMachine;
@@ -23,6 +24,7 @@ public class Portal extends Entity <Portal>{
     public Portal(float x, float y) {
         super(x, y, 500f, 250f, 300f, 150f);
         setCollisionBoxOffset(50f, 50f);
+        this.entityType = EntityTypeMessage.PORTAL;
         initializeAnimations();
         setCurrentAnimation(ObjectsAnimationType.PORTAL_RISING);
         this.stateMachine = new EntityStateMachine<>(this, new PortalState());
@@ -34,7 +36,14 @@ public class Portal extends Entity <Portal>{
 
     @Override
     public void update(float delta) {
-        stateMachine.update(delta);
+        if (!movementLocked) {
+            stateMachine.update(delta);
+        }
+        float newX = lerp(bounds.x, targetX, delta * lerpSpeed);
+        float newY = lerp(bounds.y, targetY, delta * lerpSpeed);
+        bounds.setPosition(newX, newY);
+        collisionBox.setPosition(bounds.x + collisionOffsetX, bounds.y + collisionOffsetY);
+        debugPlatformDetection();
     }
 
      public void setAnimation(ObjectsAnimationType type) {
@@ -69,4 +78,35 @@ public class Portal extends Entity <Portal>{
     public void render(com.badlogic.gdx.graphics.g2d.Batch batch) {
         stateMachine.render(batch);
     }
+
+        @Override
+public void setVisualStateFromServer(String networkState, String networkFacing) {
+    
+   
+    StateMessage newState;
+    FacingDirection newFacing;
+
+    try {
+        
+        newState = StateMessage.valueOf(networkState);
+        newFacing = FacingDirection.valueOf(networkFacing); 
+    } catch (IllegalArgumentException e) {
+        System.err.println("Estado o dirección de red desconocido: " + networkState + ", " + networkFacing);
+        return;
+    }
+
+    this.movingRight = (newFacing == FacingDirection.RIGHT);
+
+    StateMessage currentStateEnum = stateMachine.getCurrentState().getNetworkState();
+    
+    if (currentStateEnum == newState) {
+        return; 
+    }
+
+    switch (newState) {
+        case PORTAL:
+            stateMachine.changeState(new PortalState());
+            break;
+    }
+}
 }

@@ -13,6 +13,7 @@ import com.FK.game.entities.*;
 import com.FK.game.screens.*;
 import com.FK.game.states.*;
 import com.FK.game.sounds.*;
+import com.FK.game.network.*;
 
 import java.util.Random;
 public class Bolb extends Enemy {
@@ -21,6 +22,7 @@ public class Bolb extends Enemy {
         super(0, 0, 250, 300, 100, 150, collisionObjects);
         setCollisionBoxOffset(100f, 0f);
         this.maxHealth = 5; 
+        this.entityType = EntityTypeMessage.BOLB;
         this.health = this.maxHealth; 
         setDamage(1);
         this.attackRange = 50f;
@@ -30,6 +32,17 @@ public class Bolb extends Enemy {
         setCurrentAnimation(EnemyAnimationType.BOLB);
         initStateMachine();
         spawnOnRandomPlatform();
+    }
+    @Override
+    public void update(float delta) {
+        if (!movementLocked) {
+            stateMachine.update(delta);
+        }
+        float newX = lerp(bounds.x, targetX, delta * lerpSpeed);
+        float newY = lerp(bounds.y, targetY, delta * lerpSpeed);
+        bounds.setPosition(newX, newY);
+        collisionBox.setPosition(bounds.x + collisionOffsetX, bounds.y + collisionOffsetY);
+        debugPlatformDetection();
     }
 
     @Override
@@ -60,4 +73,43 @@ public class Bolb extends Enemy {
     public String toString() {
         return "Bolb";
     }
+    @Override
+public void setVisualStateFromServer(String networkState, String networkFacing) {
+    
+   
+    StateMessage newState;
+    FacingDirection newFacing;
+
+    try {
+        
+        newState = StateMessage.valueOf(networkState);
+        newFacing = FacingDirection.valueOf(networkFacing); 
+    } catch (IllegalArgumentException e) {
+        System.err.println("Estado o dirección de red desconocido: " + networkState + ", " + networkFacing);
+        return;
+    }
+
+    this.movingRight = (newFacing == FacingDirection.RIGHT);
+
+    StateMessage currentStateEnum = stateMachine.getCurrentState().getNetworkState();
+    
+    if (currentStateEnum == newState) {
+        return; 
+    }
+
+    switch (newState) {
+        case BOLB_WALKING:
+            stateMachine.changeState(new BolbWalkState());
+            break;
+        case BOLB_ATTACKING:
+            stateMachine.changeState(new BolbAttackState());
+            break;
+        case  DYING:
+            stateMachine.changeState(new DeathState());
+            break;
+        case GETTING_DAMMAGE:
+            stateMachine.changeState(new DamageState());;
+            break;
+    }
+}
 }

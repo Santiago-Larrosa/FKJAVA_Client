@@ -22,16 +22,26 @@ public class MainGame extends Game {
     public ClientThread client;
     @Override
     public void create() {
-        String serverIp = "127.0.0.1"; // O la IP de la máquina del servidor
+       /* String serverIp = "127.0.0.1"; // O la IP de la máquina del servidor
         this.client = new ClientThread(serverIp);
-        client.start();
-        Assets.load(); 
-        Assets.manager.finishLoading();
-        Assets.assignTextures();
+        client.start();*/
         playerData = new PlayerData();
         playerData2 = new PlayerData();
-        setScreen(new LoadingScreen(this));
+        setScreen(new ClientConnectionScreen(this));
     }
+public static void onWindowClosed() {
+    System.out.println("[MAIN] Cierre detectado desde ventana.");
+    try {
+        /*
+        if (instance != null && instance.server != null) {
+            instance.server.stopServer();
+            System.out.println("[MAIN] Servidor detenido por cierre de ventana.");
+        }*/
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+    
 }
 
 //./gradlew build
