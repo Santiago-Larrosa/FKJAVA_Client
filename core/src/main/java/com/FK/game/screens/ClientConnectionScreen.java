@@ -30,6 +30,7 @@ public class ClientConnectionScreen implements Screen {
     public void show() {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
+        GameContext.setConnectionScreen(this);
 
         skin = new Skin(Gdx.files.internal("ui/glassy-ui.json"));
 
@@ -62,38 +63,59 @@ public class ClientConnectionScreen implements Screen {
         statusLabel.setText("Intentando conectar al servidor...");
 
         new Thread(() -> {
-            try {
-                game.client = new ClientThread("255.255.255.255"); // broadcast o localhost
-                game.client.start();
+    try {
+        game.client = new ClientThread("255.255.255.255");
+        game.client.start();
 
-                // Esperar hasta recibir ID (puedes modificar ClientThread para exponer connected)
-                int waitCount = 0;
-                while (!game.client.isConnected() && waitCount < 200) { // 200 * 50ms = 10s
-                    Thread.sleep(50);
-                    waitCount++;
-                }
+        int waitCount = 0;
+        while (!game.client.isConnected() && waitCount < 200) {
+            Thread.sleep(50);
+            waitCount++;
+        }
 
-                if (game.client.isConnected()) {
-                    connected = true;
-                    Gdx.app.postRunnable(() -> {
-                        statusLabel.setText("Conectado al servidor. Iniciando juego...");
-                        game.setScreen(new LoadingScreen(game)); // o GameScreen directamente
-                    });
-                } else {
-                    Gdx.app.postRunnable(() -> {
-                        statusLabel.setText("No se pudo conectar. Intenta nuevamente.");
-                        connecting = false;
-                    });
-                }
+        if (game.client.isConnected()) {
+            statusLabel.setText("Conectado. Esperando al segundo jugador...");
+        }else if (game.client.isServerFull()) {
+            Gdx.app.postRunnable(() -> {
+                statusLabel.setText("El servidor está lleno. No se pueden aceptar más conexiones.");
+                connecting = false;
+            });
+            return;
+        } else {
+            Gdx.app.postRunnable(() -> {
+                statusLabel.setText("No se pudo conectar al servidor.");
+                connecting = false;
+            });
+            return;
+        }
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                Gdx.app.postRunnable(() -> {
-                    statusLabel.setText("Error de conexión. Reintenta.");
-                    connecting = false;
-                });
-            }
-        }).start();
+        waitCount = 0;
+        while (!game.client.isGameReady() && waitCount < 600) { // espera 30s
+            Thread.sleep(50);
+            waitCount++;
+        }
+
+        if (game.client.isGameReady()) {
+            Gdx.app.postRunnable(() -> {
+                statusLabel.setText("¡Ambos jugadores conectados!");
+                game.setScreen(new LoadingScreen(game));
+            });
+        } else {
+            Gdx.app.postRunnable(() -> {
+                statusLabel.setText("Tiempo de espera agotado. Intenta nuevamente.");
+                connecting = false;
+            });
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        Gdx.app.postRunnable(() -> {
+            statusLabel.setText("Error de conexión. Reintenta.");
+            connecting = false;
+        });
+    }
+}).start();
+
     }
 
     @Override
@@ -101,6 +123,10 @@ public class ClientConnectionScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.act(delta);
         stage.draw();
+    }
+
+    public MainGame getGame() {
+        return game;
     }
 
     @Override

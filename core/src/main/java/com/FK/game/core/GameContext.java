@@ -11,6 +11,7 @@ public class GameContext {
     private static volatile Player player;
     private static volatile GameScreen currentScreen;
     private static volatile int myPlayerId = -1;
+    private static ClientConnectionScreen currentClientConnectionScreen;
     private static final Array<Player> activePlayers = new Array<>();
 
     public static Array<Player> getActivePlayers() {
@@ -53,5 +54,13 @@ public class GameContext {
 
     public static GameScreen getScreen() {
         return currentScreen;
+    }
+
+    public static void setConnectionScreen(ClientConnectionScreen screen) {
+        currentClientConnectionScreen = screen;
+    }
+
+    public static ClientConnectionScreen getConnectionScreen() {
+        return currentClientConnectionScreen;
     }
 }

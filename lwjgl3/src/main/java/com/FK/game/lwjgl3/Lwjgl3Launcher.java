@@ -20,14 +20,22 @@ public class Lwjgl3Launcher {
             @Override
             public boolean closeRequested() {
                 System.out.println("[HOOK] Ventana cerrada — ejecutando limpieza manual.");
-                ClientThread client = GameContext.getScreen().getGame().client;
-                client.sendDisconnectMessage();
+                ClientThread client = GameContext.getConnectionScreen().getGame().client;
+                if (client != null){
+                    client.sendDisconnectMessage();
+                    try {
+                        Thread.sleep(150);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    client.stopClient();
+                }
                 MainGame.onWindowClosed();
                 System.exit(0);
                 return true; // permite el cierre
             }
         });
-        return new Lwjgl3Application(new MainGame(), getDefaultConfiguration());
+        return new Lwjgl3Application(new MainGame(), config);
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {

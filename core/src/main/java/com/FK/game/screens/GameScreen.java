@@ -105,6 +105,7 @@
         }
         private boolean pendingLevelChange = false;
         private float pendingLevelChangeTimer = 0f;
+        private ClientDisconnectWindow clientDisconnectWindow;
 
         
 
@@ -206,8 +207,13 @@
                 e.setTargetPosition(x, y);
                 e.setVisualStateFromServer(state, facing);
                 e.setRotation(rotation);
+
+                if (e instanceof Coin) {
+                    System.out.println("Entidad ID=" + id + " es una moneda en posición (" + x + ", " + y + ")");
+                }
                 return;
             }
+
 
             if (e == null) {
                 // auto-spawn porque no existe
@@ -326,6 +332,14 @@
         return myPlayer;
     }
 
+    private void openExitMenu() {
+        System.out .println("Abriendo menú de salida");
+            clientDisconnectWindow = new ClientDisconnectWindow(uiSkin, this::closeExitMenu, game, game.client);
+            uiStage.addActor(clientDisconnectWindow);
+            clientDisconnectWindow.centerWindow();
+            Gdx.input.setInputProcessor(uiStage);
+        }
+
     public void openUpgradeMenu() {
     if (myPlayer == null) return; // only open for local player
     myPlayer.getStateMachine().changeState(new IdleState());
@@ -358,6 +372,28 @@
     }
 
     Gdx.app.log("GameScreen", "Menú de mejoras CERRADO. Juego reanudado.");
+}
+
+        private void closeExitMenu() {
+    currentState = GameState.RUNNING;
+    clientDisconnectWindow.remove(); 
+    clientDisconnectWindow = null;
+
+    // 🔸 Restaurar control del jugador
+    if (game.client != null) {
+        NetworkInputAdapter networkAdapter = new NetworkInputAdapter(
+            game.client,
+            Input.Keys.A,
+            Input.Keys.D,
+            Input.Keys.W,
+            Input.Keys.X,
+            Input.Keys.Z,
+            Input.Keys.S
+        );
+        Gdx.input.setInputProcessor(networkAdapter);
+    }
+
+    Gdx.app.log("GameScreen", "Menú de cerrado CERRADO. Juego reanudado.");
 }
 
         private void loadEntities(float scale, FireAttackHUD existingHUD, boolean isSpawnHall) {
@@ -448,11 +484,12 @@ private void updateEntities(float delta) {
                 }
                 continue; 
             }*/
-            e.update(delta);
-            if (e instanceof Coin) {
+           e.update(delta);
+           
+            /*if (e instanceof Coin) {
                 Coin coin = (Coin) e;
                 coin.update(delta);
-            }
+            }*/
         } 
         for (BaseHUD hud : hudElements) {
             hud.update(delta);
@@ -524,16 +561,12 @@ private void updateEntities(float delta) {
     @Override
         public void render(float delta) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
-                if (currentState == GameState.RUNNING) {
-                    openUpgradeMenu();
-                } else {
-                    closeUpgradeMenu();
+            if (game.client != null) { // Solo si estás ejecutando como servidor
+                if (clientDisconnectWindow == null || !clientDisconnectWindow.hasParent()) {
+                    openExitMenu();
                 }
             }
-            if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
-                game.setScreen(new MenuScreen(game));
-                return;
-            }
+        }
 
             if (myPlayerId == -1 || GameContext.getMyPlayerId() == -1) { // ¿Todavía no sé quién soy?
                 int id = game.client.getPlayerId(); // Pregúntale al hilo de red

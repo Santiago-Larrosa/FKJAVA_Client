@@ -27,4 +27,10 @@ public class PlayerData {
     public void resetOnDeath() {
         this.currentHealth = getMaxHealth();
     }
+    public void resetOnReload() {
+        this.coinCount = 0;
+        this.healthLevel = 1;
+        this.attackDamageLevel = 1;
+        this.currentHealth = getMaxHealth();
+    }   
 }

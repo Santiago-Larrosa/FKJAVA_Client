@@ -28,6 +28,9 @@ public class ClientThread extends Thread {
     private volatile Integer pendingPlayerId = null;
     private boolean connected = false;
     private boolean isServerClosed = true;
+    private volatile boolean gameReady = false;
+    private volatile boolean serverFull = false;
+
 
     public ClientThread(String serverIp) {
         try {
@@ -150,6 +153,7 @@ private InetAddress discoverServer() {
 }
 
 
+
 public void sendDisconnectMessage() {
     try {
         if (socket != null && serverAddress != null) {
@@ -196,6 +200,18 @@ public void sendDisconnectMessage() {
             }
             return;
         }
+
+         if (message.equals("GAME_READY")) {
+            System.out.println("[CLIENT] Ambos jugadores conectados. Juego listo para comenzar.");
+            gameReady = true;
+        }
+        
+        if (message.equals("SERVER_FULL")) {
+            System.out.println("[CLIENT] El servidor está lleno. No se pueden aceptar más conexiones.");
+            gameReady = true;
+        }
+
+
 
         GameScreen screen = GameContext.getScreen();
         if (screen == null) {
@@ -280,6 +296,8 @@ public void sendDisconnectMessage() {
             });
             return;
         }
+       
+
         if (message.equals("OPEN_UPGRADE_MENU")) {
             Gdx.app.postRunnable(() -> {
             GameContext.getScreen().openUpgradeMenu();
@@ -349,34 +367,8 @@ public void sendDisconnectMessage() {
         }
 if (message.equals("SERVER_SHUTDOWN")) {
     System.out.println("[CLIENT] El servidor se ha desconectado.");
-    isServerClosed = true;
+    clientClose();
 
-    // Resetear estado interno
-    playerId = -1;
-    connected = false;
-
-    // Cerrar el socket de manera segura
-    try {
-        if (socket != null && !socket.isClosed()) {
-            socket.close();
-            System.out.println("[CLIENT] Socket cerrado tras apagado del servidor.");
-        }
-    } catch (Exception e) {
-        System.err.println("[CLIENT] Error al cerrar socket tras apagado del servidor: " + e.getMessage());
-    }
-
-    // Volver a la pantalla inicial de conexión
-    Gdx.app.postRunnable(() -> {
-        MainGame game = GameContext.getScreen().getGame();
-        if (game != null) {
-            System.out.println("[CLIENT] Volviendo a pantalla de conexión...");
-            game.setScreen(new ClientConnectionScreen(game));
-        } else {
-            System.err.println("[CLIENT] No se pudo acceder al contexto del juego para reiniciar pantalla.");
-        }
-    });
-
-    return;
 }
 
         if (message.startsWith("HUD_FIRE_STATE:")) {
@@ -489,10 +481,44 @@ if (message.equals("SERVER_SHUTDOWN")) {
         }
     
 
-        if (message.startsWith("UPDATE_ENTITY:")) {
-            
+        if (message.startsWith("DISCONNECT")) {
+            System.out.println("[CLIENT] El servidor te ha desconectado porque el otro jugador se retiro");
+            clientClose();
+        
+    
         }
 
+    }
+
+    public void clientClose () {
+        isServerClosed = true;
+
+    // Resetear estado interno
+            playerId = -1;
+            connected = false;
+
+            // Cerrar el socket de manera segura
+            try {
+                if (socket != null && !socket.isClosed()) {
+                    socket.close();
+                }
+            } catch (Exception e) {
+                System.err.println("[CLIENT] Error al cerrar socket tras apagado del servidor: " + e.getMessage());
+            }
+
+            // Volver a la pantalla inicial de conexión
+            Gdx.app.postRunnable(() -> {
+                MainGame game = GameContext.getScreen().getGame();
+                if (game != null) {
+                    System.out.println("[CLIENT] Volviendo a pantalla de conexión...");
+                    game.setScreen(new ClientConnectionScreen(game));
+                } else {
+                    System.err.println("[CLIENT] No se pudo acceder al contexto del juego para reiniciar pantalla.");
+                }
+            });
+
+            return;
+        
     }
 
     public void notifyScreenReady(GameScreen screen) {
@@ -523,4 +549,9 @@ public boolean isConnected() { return (playerId != -1); }
         running = false;
         if (socket != null && !socket.isClosed()) socket.close();
     }
+
+    public boolean isGameReady() { return gameReady; }
+
+    public boolean isServerFull() { return serverFull; }
+
 }

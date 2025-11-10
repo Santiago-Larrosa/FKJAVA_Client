@@ -20,6 +20,12 @@ public class MainGame extends Game {
     public PlayerData playerData2;
     public int roomsClearedCount = 0;
     public ClientThread client;
+
+    private static MainGame instance;
+
+public MainGame() {
+    instance = this;
+}
     @Override
     public void create() {
        /* String serverIp = "127.0.0.1"; // O la IP de la máquina del servidor
@@ -32,11 +38,11 @@ public class MainGame extends Game {
 public static void onWindowClosed() {
     System.out.println("[MAIN] Cierre detectado desde ventana.");
     try {
-        /*
-        if (instance != null && instance.server != null) {
-            instance.server.stopServer();
-            System.out.println("[MAIN] Servidor detenido por cierre de ventana.");
-        }*/
+        
+        if (instance != null && instance.client != null) {
+            instance.client.stopClient();
+            System.out.println("[MAIN] cliente detenido por cierre de ventana.");
+        }
     } catch (Exception e) {
         e.printStackTrace();
     }

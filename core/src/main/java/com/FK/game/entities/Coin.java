@@ -32,18 +32,11 @@ public class Coin extends Entity<Coin> {
 
     @Override
     public void update(float delta) {
-        if (target == null) {
-            return;
-        }
-        Vector2 targetPosition = target.getCenter();
-        Vector2 directionToTarget = targetPosition.sub(this.getCenter()).nor();
-        velocity.lerp(directionToTarget.scl(SPEED), delta * TURN_SPEED);
-        bounds.x += velocity.x * delta;
-        bounds.y += velocity.y * delta; 
-        if (getCenter().dst(target.getCenter()) < 15f) {
-            target.addCoins(1); 
-            setReadyForRemoval(true); 
-        }
+        float newX = lerp(bounds.x, targetX, delta * lerpSpeed);
+        float newY = lerp(bounds.y, targetY, delta * lerpSpeed);
+        bounds.setPosition(newX, newY);
+        collisionBox.setPosition(bounds.x + collisionOffsetX, bounds.y + collisionOffsetY);
+        debugPlatformDetection();
     }
 
     @Override
