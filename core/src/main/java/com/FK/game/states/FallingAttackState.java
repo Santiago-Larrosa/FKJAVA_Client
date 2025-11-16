@@ -25,14 +25,14 @@ public class FallingAttackState implements EntityState<Player> {
 
     @Override
     public void enter(Player player) {
-        player.setDamage(1);
+        //player.setDamage(1);
         startedPassAnimation = true;
         passAnimationFinished = false;
         passTimer = 0f;
-        player.getDamageBox().set(player.getX(), player.getY(), player.getWidth(), player.getHeight());
+        /*player.getDamageBox().set(player.getX(), player.getY(), player.getWidth(), player.getHeight());
         player.setCurrentAnimation(player.isMovingRight()
             ? PlayerAnimationType.FALLING_ATACK_PASS
-            : PlayerAnimationType.FALLING_ATACK_PASS_LEFT);
+            : PlayerAnimationType.FALLING_ATACK_PASS_LEFT);*/
     }
 
     @Override
@@ -40,7 +40,7 @@ public class FallingAttackState implements EntityState<Player> {
        
        // InputHandler input = player.getInputHandler();
 
-        player.getDamageBox().set(player.getX(), player.getY(), player.getCollisionWidth(), player.getCollisionHeight());
+        //player.getDamageBox().set(player.getX(), player.getY(), player.getCollisionWidth(), player.getCollisionHeight());
         SoundCache.getInstance().playLoop(SoundType.FALLING_ATACK, 0.4f);
         if (startedPassAnimation) {
             passTimer += delta;
@@ -58,16 +58,16 @@ public class FallingAttackState implements EntityState<Player> {
 
             player.getCurrentAnimation().update(delta);
             ((GameScreen) player.getGame().getScreen()).shakeCamera(0.3f, 5f);
-            float diagonalX = player.isMovingRight() ? DIAGONAL_SPEED : -DIAGONAL_SPEED;
-            player.getVelocity().x = diagonalX;
-            player.getVelocity().y = -DIAGONAL_SPEED;
-            float nextX = player.getBounds().x + player.getVelocity().x * delta;
-            float nextY = player.getBounds().y + player.getVelocity().y * delta;
+            //float diagonalX = player.isMovingRight() ? DIAGONAL_SPEED : -DIAGONAL_SPEED;
+            //player.getVelocity().x = diagonalX;
+            //player.getVelocity().y = -DIAGONAL_SPEED;
+            //float nextX = player.getBounds().x + player.getVelocity().x * delta;
+            //float nextY = player.getBounds().y + player.getVelocity().y * delta;
 
-            Rectangle nextBounds = new Rectangle(nextX, nextY, player.getBounds().width, player.getBounds().height);
-            Array<Rectangle> platforms = player.getCollisionObjects();
-            boolean collided = false;
-
+            //Rectangle nextBounds = new Rectangle(nextX, nextY, player.getBounds().width, player.getBounds().height);
+            //Array<Rectangle> platforms = player.getCollisionObjects();
+            //boolean collided = false;
+            /*
             for (Rectangle platform : platforms) {
                 Rectangle slightlyLowerBounds = new Rectangle(
                     nextBounds.x,
@@ -78,16 +78,16 @@ public class FallingAttackState implements EntityState<Player> {
                 if (slightlyLowerBounds.overlaps(platform)) {
                     collided = true;
                     break;
-                }
-            }   
+                }*/
+          //  }   
 
-
+/*
             if (collided) {
-                Gdx.app.log("FallingAttackState", "Colisión detectada. Cambiando a IdleState.");
-                player.getVelocity().set(0, 0);
-                player.getBounds().x = nextX;
-                player.getBounds().y = nextY;
-                SoundCache.getInstance().stopLoop(SoundType.FALLING_ATACK);
+                //Gdx.app.log("FallingAttackState", "Colisión detectada. Cambiando a IdleState.");
+                //player.getVelocity().set(0, 0);
+                //player.getBounds().x = nextX;
+                //player.getBounds().y = nextY;
+                
                 SoundCache.getInstance().get(SoundType.FALLING_CLASH).play(0.5f);
                 player.getStateMachine().changeState(new FallingState());
             } else {
@@ -99,7 +99,7 @@ public class FallingAttackState implements EntityState<Player> {
                     SoundCache.getInstance().stopLoop(SoundType.FALLING_ATACK);
                     player.getStateMachine().changeState(new FallingState());
                 }*/
-            }
+            //}
 
 
         }
@@ -128,7 +128,7 @@ public class FallingAttackState implements EntityState<Player> {
 
     @Override
     public void exit(Player player) {
-        player.setDamage(3);
+        //player.setDamage(3);
         SoundCache.getInstance().stopLoop(SoundType.FALLING_ATACK);
         player.setDamageSize(0,0);
     }

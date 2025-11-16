@@ -28,32 +28,14 @@ public class ChargingJumpState implements EntityState<Player> {
 
     @Override
     public void update(Player player, float delta) {
-      //  InputHandler input = player.getInputHandler();
-
         chargeTime = Math.min(chargeTime + delta, MAX_CHARGE_TIME);
         
         player.getCurrentAnimation().update(delta);
         SoundCache.getInstance().stopLoop(SoundType.WALK);
-        
-        /*if (!input.isJumpPressed()) {
-            float jumpForce = MIN_JUMP_FORCE + 
-                            (MAX_JUMP_FORCE - MIN_JUMP_FORCE) * (chargeTime / MAX_CHARGE_TIME);
-            
-            player.getVelocity().y = jumpForce;
-            player.setOnGround(false);
-            player.getStateMachine().changeState(new JumpingState());
-        }*/
     }
 
     @Override
     public void handleInput(Player player) {
-       /* InputHandler input = player.getInputHandler();
-    
-        if (input.isMoveLeftPressed()) {
-            player.setMovingRight(false);
-        } else if (input.isMoveRightPressed()) {
-            player.setMovingRight(true);
-        }*/
     }
 
     @Override

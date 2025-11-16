@@ -17,7 +17,6 @@ import com.FK.game.sounds.*;
 import com.FK.game.network.*;
 
 public class Fire extends Entity <Fire>{
-    protected AnimationHandler[] animations;
     protected ObjectsAnimationType currentAnimationType;
 
     public Fire(float x, float y) {
@@ -28,7 +27,7 @@ public class Fire extends Entity <Fire>{
         setKnockbackX(100f);
         setKnockbackY(200f);
         initializeAnimations();
-        setCurrentAnimation(ObjectsAnimationType.PORTAL_RISING);
+        setCurrentAnimation(ObjectsAnimationType.FIRE_LOOP);
         this.stateMachine = new EntityStateMachine<>(this, new FireBasicState());
     }
 
@@ -68,14 +67,7 @@ public class Fire extends Entity <Fire>{
         }
     }
 
-    private void initializeAnimations() {
-        animations = new AnimationHandler[ObjectsAnimationType.values().length];
-        AnimationCache cache = AnimationCache.getInstance();
-        
-        for (ObjectsAnimationType type : ObjectsAnimationType.values()) {
-            animations[type.ordinal()] = cache.createAnimation(type);
-        }
-    }
+    
 
     @Override
     public void render(com.badlogic.gdx.graphics.g2d.Batch batch) {

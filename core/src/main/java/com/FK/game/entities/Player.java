@@ -63,17 +63,10 @@ public class Player extends CharacterEntity<Player> {
         setKnockbackX(300f);
         setKnockbackY(400f);
         setCollisionBoxOffset(10f, 0f);
-        TextureLoader loader = new BasicTextureLoader(); 
-        AnimationCache cache = AnimationCache.getInstance();
-        this.animations = new AnimationHandler[PlayerAnimationType.values().length];
-        for (PlayerAnimationType type : PlayerAnimationType.values()) {
-            animations[type.ordinal()] = cache.createAnimation(type);
-        }
-
+        initializeAnimations();
         this.stateMachine = new EntityStateMachine<>(this, new IdleState());
         this.currentState = new IdleState();
         this.currentState.enter(this);
-        applyPlayerData();
     }
    
     @Override
@@ -96,11 +89,20 @@ public class Player extends CharacterEntity<Player> {
 
 
     public void render(Batch batch) {
-    if (currentAnimation != null) {
-        TextureRegion frame = currentAnimation.getCurrentFrame();
-        batch.draw(frame, bounds.x, bounds.y, bounds.width, bounds.height);
+        if (currentAnimation != null) {
+            TextureRegion frame = currentAnimation.getCurrentFrame();
+            batch.draw(frame, bounds.x, bounds.y, bounds.width, bounds.height);
+        }
     }
-}
+    @Override
+    protected void initializeAnimations() {
+        animations = new AnimationHandler[PlayerAnimationType.values().length];
+        AnimationCache cache = AnimationCache.getInstance();
+        
+        for (PlayerAnimationType type : PlayerAnimationType.values()) {
+            animations[type.ordinal()] = cache.createAnimation(type);
+        }
+    }
 
     @Override
     public AnimationType getDamageAnimationType() {
@@ -114,17 +116,17 @@ public class Player extends CharacterEntity<Player> {
         newState.enter(this);
     }
 
-     public EntityStateMachine<Player> getStateMachine() {
+    public EntityStateMachine<Player> getStateMachine() {
         return stateMachine;
     }
 
- public void updateFireCondition (boolean charged) {
-        this.isFireCharged = charged;
-    }
+    public void updateFireCondition (boolean charged) {
+            this.isFireCharged = charged;
+        }
 
-public void updateFireCooldown(float delta) {
-        //fireAttackHUD.updateFire(delta, isFireCharged);
-    }
+    public void updateFireCooldown(float delta) {
+            fireAttackHUD.updateFire(delta, isFireCharged);
+        }
 
     public void setIsFireCharged(boolean charged) {
         this.isFireCharged = charged;
@@ -156,7 +158,7 @@ public void updateFireCooldown(float delta) {
     }
 
     @Override
-public void setCurrentAnimation(AnimationType animType) {
+    public void setCurrentAnimation(AnimationType animType) {
         PlayerAnimationType type = (PlayerAnimationType) animType;
         if (type == null || type.ordinal() >= animations.length) {
             throw new IllegalArgumentException("Tipo de animación inválido");
@@ -243,70 +245,61 @@ public void setCurrentAnimation(AnimationType animType) {
         return playerData.coinCount;
     }
 
-    // --- AÑADE ESTE CÓDIGO A TU CLASE Player.java ---
-
-// (Asegúrate de que los enums StateMessage y FacingDirection (o como los llames)
-// estén disponibles en el 'core' para que esta clase pueda usarlos)
-
-/**
- * Recibe el estado "real" desde el servidor y fuerza a la máquina de estados
- * VISUAL del cliente a sincronizarse, cambiando la animación.
- */
-@Override
-public void setVisualStateFromServer(String networkState, String networkFacing) {
-    
-   
-    StateMessage newState;
-    FacingDirection newFacing;
-
-    try {
+    @Override
+    public void setVisualStateFromServer(String networkState, String networkFacing) {
         
-        newState = StateMessage.valueOf(networkState);
-        newFacing = FacingDirection.valueOf(networkFacing); 
-    } catch (IllegalArgumentException e) {
-        System.err.println("Estado o dirección de red desconocido: " + networkState + ", " + networkFacing);
-        return;
-    }
-
-    this.movingRight = (newFacing == FacingDirection.RIGHT);
-
-    StateMessage currentStateEnum = stateMachine.getCurrentState().getNetworkState();
     
-    if (currentStateEnum == newState) {
-        return; 
-    }
+        StateMessage newState;
+        FacingDirection newFacing;
 
-    switch (newState) {
-        case PLAYER_IDLE:
-            stateMachine.changeState(new IdleState());
-            break;
-        case PLAYER_WALKING:
-            stateMachine.changeState(new WalkingState());
-            break;
-        case PLAYER_JUMPING:
-            stateMachine.changeState(new JumpingState());
-            break;
-        case PLAYER_ATTACKING:
-            stateMachine.changeState(new AttackingState());
-            break;
-        case PLAYER_CHARGING_JUMP:
-            stateMachine.changeState(new ChargingJumpState());
-            break;
-        case PLAYER_FIRING:
-            stateMachine.changeState(new FireAttackState());
-            break;
-        case PLAYER_FALLING:
-            stateMachine.changeState(new FallingState());
-            break;
-        case PLAYER_FALLING_AND_ATTACKING:
-            stateMachine.changeState(new FallingAttackState());
-            break;  
-        case  DYING:
-            stateMachine.changeState(new DeathState());
-            break;
-        case GETTING_DAMMAGE:
-            stateMachine.changeState(new DamageState());;
-            break;
+        try {
+            
+            newState = StateMessage.valueOf(networkState);
+            newFacing = FacingDirection.valueOf(networkFacing); 
+        } catch (IllegalArgumentException e) {
+            System.err.println("Estado o dirección de red desconocido: " + networkState + ", " + networkFacing);
+            return;
+        }
+
+        this.movingRight = (newFacing == FacingDirection.RIGHT);
+
+        StateMessage currentStateEnum = stateMachine.getCurrentState().getNetworkState();
+        
+        if (currentStateEnum == newState) {
+            return; 
+        }
+
+        switch (newState) {
+            case PLAYER_IDLE:
+                stateMachine.changeState(new IdleState());
+                break;
+            case PLAYER_WALKING:
+                stateMachine.changeState(new WalkingState());
+                break;
+            case PLAYER_JUMPING:
+                stateMachine.changeState(new JumpingState());
+                break;
+            case PLAYER_ATTACKING:
+                stateMachine.changeState(new AttackingState());
+                break;
+            case PLAYER_CHARGING_JUMP:
+                stateMachine.changeState(new ChargingJumpState());
+                break;
+            case PLAYER_FIRING:
+                stateMachine.changeState(new FireAttackState());
+                break;
+            case PLAYER_FALLING:
+                stateMachine.changeState(new FallingState());
+                break;
+            case PLAYER_FALLING_AND_ATTACKING:
+                stateMachine.changeState(new FallingAttackState());
+                break;  
+            case  DYING:
+                stateMachine.changeState(new DeathState());
+                break;
+            case GETTING_DAMMAGE:
+                stateMachine.changeState(new DamageState());;
+                break;
+        }
     }
-}
 }

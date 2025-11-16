@@ -16,13 +16,14 @@ import com.FK.game.sounds.*;
 import com.FK.game.network.*;
 
 import java.util.Random;
-public class Slop extends Enemy {
+public class Slop extends Enemy<Slop> {
     
     public Slop(Array<Rectangle> collisionObjects) {
         super(0, 0, 106, 75, 106, 75, collisionObjects);
         setCollisionBoxOffset(0f, 0f);
         setCurrentAnimation(EnemyAnimationType.SLOP);
         this.maxHealth = 3; 
+        this.stateMachine = new EntityStateMachine<>(this, new SlopWalkState());
         this.attackRange = 50f;
         this.entityType = EntityTypeMessage.SLOP;   
         this.health = this.maxHealth; 
@@ -69,13 +70,19 @@ public AnimationType getDamageAnimationType() {
 }
 
     @Override
-    public EntityState<Enemy> getDefaultState() {
-        return (EntityState<Enemy>) new SlopWalkState();
+    public EntityState<Slop> getDefaultState() {
+        return (EntityState<Slop>) new SlopWalkState();
     }
     @Override
     public String toString() {
         return "Slop";
     }
+
+    @Override
+    public EntityState<Slop> createDefaultState() {
+        return new SlopWalkState();
+    }
+
 
         @Override
 public void setVisualStateFromServer(String networkState, String networkFacing) {

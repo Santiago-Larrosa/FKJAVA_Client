@@ -12,6 +12,8 @@ import com.badlogic.gdx.utils.Array;
 import com.FK.game.animations.AnimationHandler;
 import com.FK.game.states.*;
 import com.FK.game.network.*;
+import com.FK.game.core.*;
+import com.FK.game.animations.*;
 
 public abstract class Entity<T extends Entity<T>> {
     protected Rectangle bounds;
@@ -65,7 +67,14 @@ public abstract class Entity<T extends Entity<T>> {
             batch.draw(frame, bounds.x, bounds.y, bounds.width, bounds.height);
         }
     }
-
+    protected void initializeAnimations() {
+        animations = new AnimationHandler[ObjectsAnimationType.values().length];
+        AnimationCache cache = AnimationCache.getInstance();
+        
+        for (ObjectsAnimationType type : ObjectsAnimationType.values()) {
+            animations[type.ordinal()] = cache.createAnimation(type);
+        }
+    }
     public abstract void setVisualStateFromServer(String networkState, String networkFacing);
 
     protected void applyPhysics(float delta) {
@@ -97,7 +106,7 @@ public abstract class Entity<T extends Entity<T>> {
     }
 
      public void debugPlatformDetection() {      
-        if (collisionObjects == null || collisionObjects.isEmpty()) {
+        /*if (collisionObjects == null || collisionObjects.isEmpty()) {
             return;
         }
 
@@ -127,7 +136,7 @@ public abstract class Entity<T extends Entity<T>> {
                 onPlatform = true;
                 break;
             }
-        }
+        }*/
     }
 public float getRotation() { return rotation; }
 public void setRotation(float rotation) { this.rotation = rotation; }
@@ -135,17 +144,17 @@ public boolean hasRotation() { return true; }
     
 
     public void renderDebug(ShapeRenderer renderer) {
-        renderer.setColor(Color.BLUE);
+       /* renderer.setColor(Color.BLUE);
         renderer.begin(ShapeType.Line);
         renderer.rect(getCollisionBox().x, getCollisionBox().y, getCollisionBox().width, getCollisionBox().height);
-        renderer.end();
+        renderer.end();*/
     }
 
     public void renderDebugDamage(ShapeRenderer renderer) {
-        renderer.setColor(Color.RED);
+        /*renderer.setColor(Color.RED);
         renderer.begin(ShapeType.Line);
         renderer.rect(DamageBox.x, DamageBox.y, DamageBox.width, DamageBox.height);
-        renderer.end();
+        renderer.end();*/
     }
 
 

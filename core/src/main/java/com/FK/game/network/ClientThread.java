@@ -18,7 +18,8 @@ import java.net.SocketException;
 import com.FK.game.screens.ClientConnectionScreen;
 
 public class ClientThread extends Thread {
-    private static final int SERVER_PORT = 54555;
+    private static final int SERVER_PORT = 56555;
+    private static final int SERVER_BROADCAST_PORT = 56556;
     private boolean running = true;
     private DatagramSocket socket;
     private InetAddress serverAddress;
@@ -121,13 +122,13 @@ public void run() {
 private InetAddress discoverServer() {
     try (DatagramSocket socket = new DatagramSocket()) {
         socket.setBroadcast(true);
-        socket.setSoTimeout(2000); // espera 2 segundos máximo
+        socket.setSoTimeout(2000);
 
         String discoveryMessage = "DISCOVER_FK_SERVER";
         byte[] data = discoveryMessage.getBytes();
         DatagramPacket packet = new DatagramPacket(
             data, data.length,
-            InetAddress.getByName("255.255.255.255"), 54556 // 👈 mismo puerto del broadcast del server
+            InetAddress.getByName("255.255.255.255"), SERVER_BROADCAST_PORT 
         );
 
         System.out.println("[CLIENT] Buscando servidor en la red local...");
@@ -143,7 +144,7 @@ private InetAddress discoverServer() {
             String ip = msg.split(":")[1];
             System.out.println("[CLIENT] Servidor detectado en: " + ip);
             isServerClosed = false;
-            return InetAddress.getByName(ip); // 🔸 devuelve InetAddress
+            return InetAddress.getByName(ip); 
         }
 
     } catch (IOException e) {
@@ -156,17 +157,22 @@ private InetAddress discoverServer() {
 
 public void sendDisconnectMessage() {
     try {
-        if (socket != null && serverAddress != null) {
+        if (socket != null && !socket.isClosed() && serverAddress != null) {
             String msg = "DISCONNECT:" + playerId;
             byte[] data = msg.getBytes();
-            DatagramPacket packet = new DatagramPacket(data, data.length, serverAddress, 54555);
-            socket.send(packet);
+            DatagramPacket packet = new DatagramPacket(data, data.length, serverAddress, SERVER_PORT);
+
+            socket.send(packet); 
             System.out.println("[CLIENT] Enviando mensaje de desconexión...");
+            
+            // Esperar un poco para asegurar salida del buffer de red
+            Thread.sleep(200);
         }
     } catch (Exception e) {
         System.err.println("[CLIENT] No se pudo enviar mensaje de desconexión: " + e.getMessage());
     }
 }
+
 
 
     public void sendInput(String input) {
@@ -317,9 +323,9 @@ public void sendDisconnectMessage() {
             System.out.println("[CLIENT] Datos de mejora recibidos: Monedas=" + coins +
                                ", DañoNivel=" + dmgLvl + ", VidaNivel=" + hpLvl + ", DañoCosto=" + dmgCost + ", VidaCosto=" + hpCost);
             
-            if (screen.getUpgradeWindow() != null) {
-                screen.getUpgradeWindow().updateUIFromNetwork(coins, dmgLvl, hpLvl, dmgCost, hpCost);
-            }
+            Gdx.app.postRunnable(() -> {
+                screen.refreshUpgradeWindow();
+            });
         }
         if (message.startsWith("BOSS_LASER:")) {
             String[] parts = message.split(":");
@@ -493,11 +499,9 @@ if (message.equals("SERVER_SHUTDOWN")) {
     public void clientClose () {
         isServerClosed = true;
 
-    // Resetear estado interno
             playerId = -1;
             connected = false;
 
-            // Cerrar el socket de manera segura
             try {
                 if (socket != null && !socket.isClosed()) {
                     socket.close();
@@ -506,7 +510,6 @@ if (message.equals("SERVER_SHUTDOWN")) {
                 System.err.println("[CLIENT] Error al cerrar socket tras apagado del servidor: " + e.getMessage());
             }
 
-            // Volver a la pantalla inicial de conexión
             Gdx.app.postRunnable(() -> {
                 MainGame game = GameContext.getScreen().getGame();
                 if (game != null) {

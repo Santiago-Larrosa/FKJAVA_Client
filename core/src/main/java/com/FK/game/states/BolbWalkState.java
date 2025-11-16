@@ -2,7 +2,6 @@ package com.FK.game.states;
 
 import com.FK.game.animations.*;
 import com.FK.game.core.*;
-import com.FK.game.entities.Enemy;
 import com.FK.game.entities.Bolb;
 import com.FK.game.entities.Player;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -11,7 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.FK.game.network.StateMessage;
 
 
-public class BolbWalkState implements EntityState<Enemy> {
+public class BolbWalkState implements EntityState<Bolb> {
 
     private float waitTimer = 0f;
     private boolean waitingToTurn = false;
@@ -23,68 +22,21 @@ public class BolbWalkState implements EntityState<Enemy> {
 
 
     @Override
-    public void enter(Enemy enemy) {
-        Bolb bolb = (Bolb) enemy;
-        bolb.setAnimation(bolb.isMovingRight() ? EnemyAnimationType.BOLB : EnemyAnimationType.BOLB_LEFT);
-        airConfirmationCount[0] = 0;
-    }
-
-    @Override
-    public void update(Enemy enemy, float delta) {
-        Bolb bolb = (Bolb) enemy;
-        bolb.getCurrentAnimation().update(delta);
-        bolb.setAnimation(bolb.isMovingRight() ? EnemyAnimationType.BOLB : EnemyAnimationType.BOLB_LEFT);
-        /*if (waitingToTurn) {
-            waitTimer += delta;
-            if (waitTimer >= waitDuration) {
-                waitingToTurn = false;
-                waitTimer = 0f;
-                bolb.setMovingRight(!bolb.isMovingRight());
-                edgeDetected = true;
-
-                
-            }
-            return;
-        }
-
-        bolb.getVelocity().x = bolb.isMovingRight() ? bolb.getSpeed() : -bolb.getSpeed();
-        bolb.getBounds().x += bolb.getVelocity().x * delta;
-
-        if (!waitingToTurn && (bolb.hasWallAhead() || ( !hasGroundAhead(bolb) && !edgeDetected ))) {
-                waitingToTurn = true;
-                waitTimer = 0f; 
-            }
-
-        if (hasGroundAhead(bolb)) {
-            edgeDetected = false;
-        }
-
-        if (bolb.getKnockbackTimer() > 0f) {
-            bolb.setKnockbackTimer(bolb.getKnockbackTimer() - delta);
-        } else {
-            if (StateUtils.checkFalling(bolb, delta, airConfirmationCount)) {
-            return;
-        }
-        }
-
-        bolb.getBounds().y += bolb.getVelocity().y * delta;
-        bolb.getCollisionBox().setPosition(
-            bolb.getBounds().x + bolb.getCollisionBoxOffsetX(),
-            bolb.getBounds().y + bolb.getCollisionBoxOffsetY()
-        );
-
-        if (enemy.isPlayerInRange() && enemy.canAttack()) {
-            enemy.getStateMachine().changeState(new BolbAttackState());
-            return; // Cambiamos de estado, no necesitamos hacer más nada aquí
-        }
-
-*/
+    public void enter(Bolb bolb) {
         
+        bolb.setAnimation(bolb.isMovingRight() ? EnemyAnimationType.BOLB : EnemyAnimationType.BOLB_LEFT);
     }
 
     @Override
-    public void render(Enemy enemy, Batch batch) {
-        Bolb bolb = (Bolb) enemy;
+    public void update(Bolb bolb, float delta) {
+        
+        bolb.getCurrentAnimation().update(delta);
+        bolb.setAnimation(bolb.isMovingRight() ? EnemyAnimationType.BOLB : EnemyAnimationType.BOLB_LEFT);        
+    }
+
+    @Override
+    public void render(Bolb bolb, Batch batch) {
+        
         if (bolb.getCurrentAnimation() != null && bolb.getCurrentAnimation().getCurrentFrame() != null) {
             batch.draw(bolb.getCurrentAnimation().getCurrentFrame(),
                 bolb.getX(), bolb.getY(),
@@ -93,46 +45,12 @@ public class BolbWalkState implements EntityState<Enemy> {
     }
 
     @Override
-    public void handleInput(Enemy enemy) {}
+    public void handleInput(Bolb bolb) {}
 
     @Override
-    public void exit(Enemy enemy) {}
-
-    private boolean isWallAhead(Bolb bolb) {
-      /*  float checkX = bolb.isMovingRight()
-            ? bolb.getCollisionBox().x + bolb.getCollisionBox().width + 1
-            : bolb.getCollisionBox().x - 1;
-
-        float checkY = bolb.getCollisionBox().y;
-        float checkHeight = bolb.getCollisionBox().height;
-
-        Rectangle checkArea = new Rectangle(checkX, checkY, 1, checkHeight);
-
-        for (Rectangle platform : bolb.getCollisionObjects()) {
-            if (checkArea.overlaps(platform)) return true;
-        }
-*/
-        return false;
-    }
+    public void exit(Bolb bolb) {}
 
 
-    private boolean hasGroundAhead(Bolb bolb) {
-   /* float checkX = bolb.isMovingRight() 
-        ? bolb.getCollisionBox().x + bolb.getCollisionBox().width + 5 
-        : bolb.getCollisionBox().x - 5;
-    
-    Rectangle checkArea = new Rectangle(
-        checkX,
-        bolb.getCollisionBox().y - 15, 
-        10, 
-        15
-    );
-    
-    for (Rectangle platform : bolb.getCollisionObjects()) {
-        if (checkArea.overlaps(platform)) return true;
-    }*/
-    return false;
-}
 
     @Override
     public StateMessage getNetworkState() {

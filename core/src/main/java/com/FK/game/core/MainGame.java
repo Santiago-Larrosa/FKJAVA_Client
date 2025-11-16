@@ -24,6 +24,24 @@ public class MainGame extends Game {
     private static MainGame instance;
 
 public MainGame() {
+    Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+    System.err.println("[HOOK] Excepción no capturada en hilo: " + thread.getName());
+    throwable.printStackTrace();
+
+    // --- Desconectar cliente si existiera ---
+    try {
+        if (GameContext.getConnectionScreen() != null) {
+            ClientThread client = this.client;
+            if (client != null) {
+                client.sendDisconnectMessage();
+                client.stopClient();
+            }
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }System.err.println("[HOOK] Fuerza salida segura tras excepción.");
+    System.exit(1);
+});
     instance = this;
 }
     @Override
@@ -52,3 +70,7 @@ public static void onWindowClosed() {
 
 //./gradlew build
 //./gradlew :lwjgl3:run
+
+//./gradlew :lwjgl3:shadowJar
+//java -jar lwjgl3/build/libs/FKJAVA_Client-all.jar
+

@@ -24,22 +24,9 @@ public class DamageState implements EntityState<CharacterEntity> {
 
     @Override
     public void update(CharacterEntity character, float delta) {
-       // knockbackTimer -= delta;
-
         if (character.getCurrentAnimation() != null) {
             character.getCurrentAnimation().update(delta);
         }
-    /*
-        if (!character.isOnPlataform()) {
-            character.getVelocity().y += character.getGravity() * delta;
-        }
-
-        character.getBounds().x += character.getVelocity().x * delta;
-        character.getBounds().y += character.getVelocity().y * delta;
-
-        if (knockbackTimer <= 0f && character.isOnPlataform()) {
-            character.getStateMachine().changeState(character.getDefaultState());
-        }*/
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.FK.game.states;
 import com.badlogic.gdx.Gdx;
 import com.FK.game.animations.*;
 import com.FK.game.core.*;
-import com.FK.game.entities.Enemy;
 import com.FK.game.entities.Slop;
 import com.FK.game.entities.Slop;
 import com.FK.game.entities.Player;
@@ -13,7 +12,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.FK.game.network.StateMessage;
 
 
-public class SlopWalkState implements EntityState<Enemy> {
+public class SlopWalkState implements EntityState<Slop> {
     
         private float waitTimer = 0f;
     private boolean waitingToTurn = false;
@@ -24,15 +23,15 @@ public class SlopWalkState implements EntityState<Enemy> {
     private final Vector2 playerPos = new Vector2();
 
     @Override
-    public void enter(Enemy enemy) {
-        Slop slop = (Slop) enemy;
+    public void enter(Slop slop) {
+
         slop.setCurrentAnimation(slop.isMovingRight() ? EnemyAnimationType.SLOP : EnemyAnimationType.SLOP_LEFT);
         airConfirmationCount[0] = 0;
     }
 
      @Override
-    public void update(Enemy enemy, float delta) {
-        Slop slop = (Slop) enemy;
+    public void update(Slop slop, float delta) {
+
         slop.getCurrentAnimation().update(delta);
         slop.setCurrentAnimation(slop.isMovingRight() ? EnemyAnimationType.SLOP : EnemyAnimationType.SLOP_LEFT);
         /*
@@ -80,8 +79,8 @@ public class SlopWalkState implements EntityState<Enemy> {
     }
 
     @Override
-    public void render(Enemy enemy, Batch batch) {
-        Slop slop = (Slop) enemy;
+    public void render(Slop slop, Batch batch) {
+
         if (slop.getCurrentAnimation() != null && slop.getCurrentAnimation().getCurrentFrame() != null) {
             batch.draw(slop.getCurrentAnimation().getCurrentFrame(),
                 slop.getX(), slop.getY(),
@@ -90,10 +89,10 @@ public class SlopWalkState implements EntityState<Enemy> {
     }
 
     @Override
-    public void handleInput(Enemy enemy) {}
+    public void handleInput(Slop slop) {}
 
     @Override
-    public void exit(Enemy enemy) {}
+    public void exit(Slop slop) {}
 
     private boolean isWallAhead(Slop slop) {
       /*  float checkX = slop.isMovingRight()

@@ -73,7 +73,7 @@
         private OrthogonalTiledMapRenderer mapRenderer;
         private Array<Rectangle> collisionObjects = new Array<Rectangle>();
         private ShapeRenderer shapeRenderer;
-        private Array<Enemy> enemies; //-
+        private Array<Enemy<?>> enemies; //-
         private Array<Entity> entities;
         private Rectangle playerSpawnPoint; 
         private final Color DarkViolet = new Color(0.1f, 0.05f, 0.15f, 1f); 
@@ -106,6 +106,7 @@
         private boolean pendingLevelChange = false;
         private float pendingLevelChangeTimer = 0f;
         private ClientDisconnectWindow clientDisconnectWindow;
+        private NetworkInputAdapter networkAdapter;
 
         
 
@@ -114,12 +115,6 @@
             shapeRenderer = new ShapeRenderer();
             upgradeManager = new UpgradeManager();
             batch = new SpriteBatch();
-            /*try {
-                socket = new DatagramSocket();
-                serverAddress = InetAddress.getByName("127.0.0.1"); // o la IP del servidor
-            } catch (SocketException | UnknownHostException e) {
-                e.printStackTrace();
-            }*/
             if (isFirstRun) {
                 isFirstRun = false;
             entities = new Array<>();
@@ -144,7 +139,7 @@
             hudFont = new BitmapFont();
             loadInitialMap(); 
             }
-            NetworkInputAdapter networkAdapter = new NetworkInputAdapter(
+            networkAdapter = new NetworkInputAdapter(
                 game.client,
                 Input.Keys.A,        // keyLeft
                 Input.Keys.D,        // keyRight
@@ -153,6 +148,7 @@
                 Input.Keys.Z,        // keyFireAttack
                 Input.Keys.S         // keyDown
             );
+            
             Gdx.input.setInputProcessor(networkAdapter);
             
             
@@ -182,7 +178,6 @@
                 System.out.println("ENTITY LIST SIZE=" + entities.size);
             }
             
-            //System.out.println("Actualizando estado del jugador ID=" + id + " a posición (" + x + ", " + y + ")");
             playerToUpdate.setTargetPosition(x, y);
             playerToUpdate.setVisualStateFromServer(stateName, facingName);
         }
@@ -203,7 +198,6 @@
             Entity e = remoteEntities.get(id);
 
             if (e != null) {
-                //System.out.println("Actualizando estado de la entidad ID=" + id + " a posición (" + x + ", " + y + ")" + "de tipo " + type);
                 e.setTargetPosition(x, y);
                 e.setVisualStateFromServer(state, facing);
                 e.setRotation(rotation);
@@ -216,7 +210,6 @@
 
 
             if (e == null) {
-                // auto-spawn porque no existe
                 System.out.println("[CLIENT] Creando entidad ID=" + id);
 
                 e = createEntityFromState(id, type);
@@ -277,11 +270,6 @@
             mapRenderer = new OrthogonalTiledMapRenderer(map, mapManager.getScale());
             
             loadCollisionObjects(mapManager.getScale());
-            
-            //Array<Rectangle> portalSpawns = loadSpawnPoints("Portal", mapManager.getScale());
-            /*if (portalSpawns.size > 0) {
-                this.portalSpawnPoint = portalSpawns.first();
-            }*/
             loadEntities(mapManager.getScale(), null, true);
         }
 
@@ -303,11 +291,6 @@
             mapRenderer = new OrthogonalTiledMapRenderer(map, mapManager.getScale());
 
             loadCollisionObjects(mapManager.getScale());
-
-            //Array<Rectangle> portalSpawns = loadSpawnPoints("Portal", mapManager.getScale());
-           /* if (portalSpawns.size > 0) {
-                this.portalSpawnPoint = portalSpawns.first();
-            }*/
             System.out.println("cantidad de jugadores remotos antes de cargar el mapa: " + remotePlayers.size());
             System.out.println("La cantidad de entidades antes de cargar el mapa es: " + entities.size);
 
@@ -341,7 +324,7 @@
         }
 
     public void openUpgradeMenu() {
-    if (myPlayer == null) return; // only open for local player
+    if (myPlayer == null) return; 
     myPlayer.getStateMachine().changeState(new IdleState());
     game.client.sendNetworkInput(NetworkMessage.STOP_ATTACK);
 
@@ -352,80 +335,56 @@
 }
 
 
-        private void closeUpgradeMenu() {
-    currentState = GameState.RUNNING;
-    upgradeWindow.remove(); 
-    upgradeWindow = null;
+    private void closeUpgradeMenu() {
+        currentState = GameState.RUNNING;
+        upgradeWindow.remove(); 
+        upgradeWindow = null;
 
-    // 🔸 Restaurar control del jugador
-    if (game.client != null) {
-        NetworkInputAdapter networkAdapter = new NetworkInputAdapter(
-            game.client,
-            Input.Keys.A,
-            Input.Keys.D,
-            Input.Keys.W,
-            Input.Keys.X,
-            Input.Keys.Z,
-            Input.Keys.S
-        );
-        Gdx.input.setInputProcessor(networkAdapter);
+        if (game.client != null) {
+            Gdx.input.setInputProcessor(this.networkAdapter);
+        }
+
+        Gdx.app.log("GameScreen", "Menú de mejoras CERRADO. Juego reanudado.");
     }
 
-    Gdx.app.log("GameScreen", "Menú de mejoras CERRADO. Juego reanudado.");
-}
-
-        private void closeExitMenu() {
+    private void closeExitMenu() {
     currentState = GameState.RUNNING;
     clientDisconnectWindow.remove(); 
     clientDisconnectWindow = null;
 
-    // 🔸 Restaurar control del jugador
     if (game.client != null) {
-        NetworkInputAdapter networkAdapter = new NetworkInputAdapter(
-            game.client,
-            Input.Keys.A,
-            Input.Keys.D,
-            Input.Keys.W,
-            Input.Keys.X,
-            Input.Keys.Z,
-            Input.Keys.S
-        );
-        Gdx.input.setInputProcessor(networkAdapter);
+        
+        Gdx.input.setInputProcessor(this.networkAdapter);
     }
 
     Gdx.app.log("GameScreen", "Menú de cerrado CERRADO. Juego reanudado.");
 }
+ public void notifyLevelChange() {
+    System.out.println("[GameScreen] notifyLevelChange() llamado — cambio de nivel pendiente");
+    pendingLevelChange = true;
+}
+
 
         private void loadEntities(float scale, FireAttackHUD existingHUD, boolean isSpawnHall) {
-
-            
-                //Rectangle spawn = playerSpawns.first();
-                //playerSpawnPoint = spawn;
-                
                 myPlayer = new Player(game, game.playerData);
                 myPlayer.setCurrentAnimation(PlayerAnimationType.IDLE_RIGHT);
-                //myPlayer.setPosition(spawn.x, spawn.y);
-                myPlayer.setCollisionObjects(collisionObjects);
                 hudElements = new Array<>();
-
-                
                 entities.add(myPlayer);
                 GameContext.setPlayer(myPlayer);
-
                 FireAttackHUD fireHUD = new FireAttackHUD();
                 myPlayer.setFireAttackHUD(fireHUD); 
                 hudElements.add(fireHUD);
-
                 CoinHUD coinHUD1 = new CoinHUD(game.playerData, Assets.coinTexture, hudFont);
                 hudElements.add(coinHUD1);
                 GameContext.addPlayer(myPlayer); 
             
         }
-public void refreshUpgradeWindow() {
-    if (upgradeWindow != null) {
-        upgradeWindow.updateButtons();
-    }
-}
+
+        public void refreshUpgradeWindow() {
+            if (upgradeWindow != null) {
+                upgradeWindow.updateButtons();
+            }
+        }
 
         private void loadCollisionObjects(float scale) {
             MapLayer collisionLayer = map.getLayers().get("Capa de Objetos 1");
@@ -445,11 +404,6 @@ public void refreshUpgradeWindow() {
                 Gdx.app.log("DEBUG", "No se encontró la capa de colisiones");
             }
         }
-        public void notifyLevelChange() {
-    System.out.println("[GameScreen] notifyLevelChange() llamado — cambio de nivel pendiente");
-    pendingLevelChange = true;
-    pendingLevelChangeTimer = 0f; // opcional
-}
 
 
 private void updateEntities(float delta) {
@@ -467,29 +421,7 @@ private void updateEntities(float delta) {
                 }
                 
             }
-            /*if (e instanceof CharacterEntity<?>) {
-                ((CharacterEntity<?>) e).updateDamageCooldown(delta); 
-            }*/
-           /*
-            if (e instanceof Entity && ((Entity) e).isReadyForRemoval()) {
-                
-                if (e == myPlayer) {
-                    game.playerData.resetOnDeath();
-                    game.setScreen(new GameScreen(game)); 
-                }
-                
-                entities.removeIndex(i);
-                if (e instanceof Enemy) {
-                    enemies.removeValue((Enemy) e, true);
-                }
-                continue; 
-            }*/
            e.update(delta);
-           
-            /*if (e instanceof Coin) {
-                Coin coin = (Coin) e;
-                coin.update(delta);
-            }*/
         } 
         for (BaseHUD hud : hudElements) {
             hud.update(delta);
@@ -502,61 +434,14 @@ private void updateEntities(float delta) {
                 Entity e = entities.get(i);
                 if (e instanceof Boss) {
                     Boss boss = (Boss) e;
-                    return boss; // ✅ seguro
+                    return boss; 
                 }
             }
 
         
         return null;
     }
-/*
-        private void checkEntityDamage() {
-            for (int i = 0; i < entities.size; i++) {
-                Entity attacker = entities.get(i);
-                Rectangle damageBox = attacker.getDamageBox();
 
-                if (damageBox.width == 0 || damageBox.height == 0) continue;
-
-                for (int j = 0; j < entities.size; j++) {
-                    if (i == j) continue;
-
-                    Entity target = entities.get(j);
-
-                    if (damageBox.overlaps(target.getCollisionBox())) {                    
-                        if (attacker instanceof Player && target instanceof Fire ) {
-                            //openUpgradeMenu();
-                        } else {
-                            if (target instanceof CharacterEntity) {
-                                ((CharacterEntity) target).receiveDamage(attacker);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-*/
-/*
-        private Array<Rectangle> loadSpawnPoints(String layerName, float scale) {
-        Array<Rectangle> spawnPoints = new Array<>();
-        MapLayer layer = map.getLayers().get(layerName);
-
-        if (layer != null) {
-            for (MapObject object : layer.getObjects()) {
-                if (object instanceof RectangleMapObject) {
-                    Rectangle rect = ((RectangleMapObject) object).getRectangle();
-                    rect.x *= scale;
-                    rect.y *= scale;
-                    rect.width *= scale;
-                    rect.height *= scale;
-                    spawnPoints.add(rect);
-                }
-            }
-        } else {
-            Gdx.app.log("DEBUG", "No se encontró la capa: " + layerName);
-        }
-        return spawnPoints;
-    }
-*/
 
     @Override
         public void render(float delta) {
@@ -579,16 +464,13 @@ private void updateEntities(float delta) {
             }else {
                 myPlayerId = GameContext.getMyPlayerId();
             }
-            if (pendingLevelChange) {
-            // OPCIONAL: asegurarse unos frames si querés debuggear
-            pendingLevelChangeTimer += delta;
-            if (pendingLevelChangeTimer > 0.05f) { // 50ms
+            if (pendingLevelChange) { // 50ms
                 pendingLevelChange = false;
 
                 System.out.println("[GameScreen] Aplicando cambio de nivel…");
                 game.setScreen(new InterlevelLoadingScreen(game, this));
                 return;
-            }
+            
             }
 
 

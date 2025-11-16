@@ -16,7 +16,7 @@ import com.FK.game.sounds.*;
 import com.FK.game.network.*;
 
 import java.util.Random;
-public class Bolb extends Enemy {
+public class Bolb extends Enemy<Bolb> {
     
     public Bolb(Array<Rectangle> collisionObjects) {
         super(0, 0, 250, 300, 100, 150, collisionObjects);
@@ -24,6 +24,7 @@ public class Bolb extends Enemy {
         this.maxHealth = 5; 
         this.entityType = EntityTypeMessage.BOLB;
         this.health = this.maxHealth; 
+        this.stateMachine = new EntityStateMachine<>(this, new BolbWalkState());
         setDamage(1);
         this.attackRange = 50f;
         setKnockbackX(100f);
@@ -66,9 +67,10 @@ public class Bolb extends Enemy {
     }
 
     @Override
-    public EntityState<Enemy> getDefaultState() {
+    public EntityState<Bolb> createDefaultState() {
         return new BolbWalkState();
     }
+
     @Override
     public String toString() {
         return "Bolb";

@@ -17,7 +17,7 @@ import com.FK.game.network.*;
 
 
 import java.util.Random;
-public class Boss extends Enemy {
+public class Boss extends Enemy<Boss> {
     private Player currentTarget;
     private Phase laserState = Phase.IDLE;
     private float laserTimer = 0f;
@@ -86,7 +86,7 @@ public void acquireTarget() {
     }
 
     @Override
-    public EntityState<Enemy> getDefaultState() {
+    public EntityState<Boss> getDefaultState() {
         return new BossIdleState();
     }
     @Override
@@ -109,7 +109,9 @@ public void fireLaser(float angle) {
 public void laserCooldown() {
     laserState = Phase.COOLDOWN;
 }
-
+public EntityState<Boss> createDefaultState() {
+        return new BossIdleState();
+    }
 public void endLaserAttack() {
     laserState = Phase.IDLE;
 }

@@ -65,7 +65,7 @@ public class ClientDisconnectWindow extends Window {
     private void confirmShutdown() {
         try {
             System.out.println("[CLIENT_UI] Finalizando sesión desde ventana.");
-            game.playerData.resetOnReload();
+            game.playerData.resetOnReload();    
             client.sendDisconnectMessage();
             client.clientClose();
         } catch (Exception e) {

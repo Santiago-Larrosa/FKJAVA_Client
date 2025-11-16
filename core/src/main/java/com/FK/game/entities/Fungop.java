@@ -11,7 +11,7 @@ import com.FK.game.animations.*;
 import com.FK.game.core.GameContext;
 import com.FK.game.network.*;
 
-public class Fungop extends Enemy {
+public class Fungop extends Enemy<Fungop> {
    
     public Fungop(Array<Rectangle> collisionObjects) {
         super(0, 0, 200, 269, 120, 150, collisionObjects);
@@ -77,9 +77,7 @@ public AnimationType getDamageAnimationType() {
     // La misma lógica, pero con los tipos de animación del enemigo.
     return isMovingRight() ? EnemyAnimationType.FUNGOP : EnemyAnimationType.FUNGOP;
 }
-
-    @Override
-    public EntityState<Enemy> getDefaultState() {
+public EntityState<Fungop> createDefaultState() {
         return new FungoFlyingState();
     }
 

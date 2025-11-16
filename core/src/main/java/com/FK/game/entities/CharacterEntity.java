@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.Array;
 import com.FK.game.animations.AnimationHandler;
 import com.FK.game.states.*;
 import com.FK.game.animations.*;
+import com.FK.game.core.*;
 
 public abstract class CharacterEntity<T extends CharacterEntity<T>> extends Entity<T> {
     
@@ -20,11 +21,13 @@ public abstract class CharacterEntity<T extends CharacterEntity<T>> extends Enti
     protected static final float DAMAGE_COOLDOWN_TIME = 0.5f;
     
     private Vector2 lastKnockback;
+protected AnimationHandler[] animations;
 
     public CharacterEntity(float x, float y, float width, float height, float collisionWidth, float collisionHeight) {
     super(x, y, width, height, collisionWidth, collisionHeight);
     this.lastKnockback = new Vector2();
     this.stateMachine = new EntityStateMachine<>((T) this);
+    
 
 }
 
@@ -37,6 +40,16 @@ public abstract class CharacterEntity<T extends CharacterEntity<T>> extends Enti
 public void initStateMachine() {
     this.stateMachine.changeState(getDefaultState());
 }
+
+@Override
+protected void initializeAnimations() {
+        animations = new AnimationHandler[EnemyAnimationType.values().length];
+        AnimationCache cache = AnimationCache.getInstance();
+        
+        for (EnemyAnimationType type : EnemyAnimationType.values()) {
+            animations[type.ordinal()] = cache.createAnimation(type);
+        }
+    }
 
 public void receiveDamage(Entity source) {
     if (!(source instanceof CharacterEntity)) return;
@@ -77,5 +90,7 @@ public void receiveDamage(Entity source) {
         return lastKnockback;
     }
     
-    public abstract EntityState<T> getDefaultState();
+    public EntityState<T> getDefaultState() {
+        return null;
+    }
 }

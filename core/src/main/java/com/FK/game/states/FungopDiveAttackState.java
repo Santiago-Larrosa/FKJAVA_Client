@@ -8,12 +8,12 @@ import com.badlogic.gdx.math.Vector2;
 import com.FK.game.animations.AnimationHandler;
 import com.FK.game.animations.EnemyAnimationType;
 import com.FK.game.core.GameContext;
-import com.FK.game.entities.Enemy;
+import com.FK.game.entities.Fungop;
 import com.FK.game.entities.Player;
 import com.FK.game.screens.GameScreen;
 import com.FK.game.network.StateMessage;
 
-public class FungopDiveAttackState implements EntityState<Enemy> {
+public class FungopDiveAttackState implements EntityState<Fungop> {
 
     private final float ATTACK_SPEED = 900f;
     private final float PASS_ANIMATION_DURATION = 0.3f; 
@@ -27,7 +27,7 @@ public class FungopDiveAttackState implements EntityState<Enemy> {
     Player player = GameContext.getPlayer();
 
     @Override
-    public void enter(Enemy fungo) {
+    public void enter(Fungop fungo) {
         fungo.setCanAttack(false);
         passTimer = 0f;
         passAnimationFinished = false;
@@ -51,7 +51,7 @@ public class FungopDiveAttackState implements EntityState<Enemy> {
     }
 
     @Override
-    public void update(Enemy fungo, float delta) {
+    public void update(Fungop fungo, float delta) {
         fungo.getCurrentAnimation().update(delta);
 
         if (!passAnimationFinished) {
@@ -91,7 +91,7 @@ public class FungopDiveAttackState implements EntityState<Enemy> {
     }
 
     @Override
-    public void render(Enemy fungo, Batch batch) {
+    public void render(Fungop fungo, Batch batch) {
         TextureRegion frame = fungo.getCurrentAnimation().getCurrentFrame();
         batch.draw(frame, fungo.getX(), fungo.getY(), fungo.getWidth() / 2f, fungo.getHeight() / 2f,
                    fungo.getWidth(), fungo.getHeight(), 1f, 1f, fungo.getRotation());
@@ -102,10 +102,10 @@ public class FungopDiveAttackState implements EntityState<Enemy> {
         return StateMessage.FUNGOP_ATTACKING;
     }
     
-    @Override public void exit(Enemy fungo) {
+    @Override public void exit(Fungop fungo) {
         ((GameScreen) player.getGame().getScreen()).shakeCamera(1f, 20f);
         fungo.getVelocity().set(0, 0);
         fungo.getDamageBox().set(0, 0, 0, 0);
     }
-    @Override public void handleInput(Enemy entity) {}
+    @Override public void handleInput(Fungop entity) {}
 }

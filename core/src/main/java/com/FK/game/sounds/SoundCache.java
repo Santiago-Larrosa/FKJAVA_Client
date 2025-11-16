@@ -22,6 +22,7 @@ public class SoundCache {
     private Map<SoundType, Long> loopingSounds;
     final float MAX_HEARING_DISTANCE = 500f; 
     final float MAX_VOLUME = 0.8f;
+    private final Vector2 tmpVec = new Vector2();
 
     private SoundCache() {
         soundMap = new EnumMap<>(SoundType.class);
@@ -120,25 +121,39 @@ public class SoundCache {
     }
 
     public void updateSpatialLoops(Player listener) {
-        if (listener == null) return;
-        Vector2 listenerPosition = new Vector2(listener.getX(), listener.getY());
+    if (listener == null) return;
 
-        final float MAX_HEARING_DISTANCE = 500f;
-        final float MAX_VOLUME = 0.8f;
+    Vector2 listenerPosition = new Vector2(listener.getX(), listener.getY());
 
-        for (ManagedLoop loop : managedLoops) {
-            Vector2 sourcePosition = new Vector2(loop.source.getX(), loop.source.getY());
-            
-            float distance = sourcePosition.dst(listenerPosition);
-            float volume = (distance > MAX_HEARING_DISTANCE) ? 0 : MAX_VOLUME * (1.0f - (distance / MAX_HEARING_DISTANCE));
-            
-            float dx = sourcePosition.x - listenerPosition.x;
-            float pan = MathUtils.clamp(dx / (MAX_HEARING_DISTANCE / 2.0f), -1.0f, 1.0f);
+    final float MAX_HEARING_DISTANCE = 500f;
+    final float MAX_VOLUME = 0.8f;
 
-            soundMap.get(loop.type).setVolume(loop.soundId, volume);
-            soundMap.get(loop.type).setPan(loop.soundId, pan, volume);
+    // 🚫 No usar foreach → provoca #iterator() cannot be used nested
+    // 🚫 No usar Iterator()
+
+    // ⭐ Usar acceso por índice, único método seguro en LibGDX Array:
+    for (int i = 0; i < managedLoops.size; i++) {
+        ManagedLoop loop = managedLoops.get(i);
+        if (loop == null) continue;
+
+        Vector2 sourcePosition = tmpVec.set(loop.source.getX(), loop.source.getY());
+        float distance = sourcePosition.dst(listenerPosition);
+
+        float volume = (distance > MAX_HEARING_DISTANCE)
+                ? 0f
+                : MAX_VOLUME * (1f - (distance / MAX_HEARING_DISTANCE));
+
+        float dx = sourcePosition.x - listenerPosition.x;
+        float pan = MathUtils.clamp(dx / (MAX_HEARING_DISTANCE / 2f), -1f, 1f);
+
+        Sound sound = soundMap.get(loop.type);
+        if (sound != null) {
+            sound.setVolume(loop.soundId, volume);
+            sound.setPan(loop.soundId, pan, volume);
         }
     }
+}
+
 
     private static class ManagedLoop {
     public SoundType type;

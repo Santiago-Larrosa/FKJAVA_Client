@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.FK.game.core.MainGame;
+import com.FK.game.animations.*;
 
 public abstract class AbstractUIScreen implements Screen {
     protected final MainGame game;
@@ -22,7 +23,7 @@ public abstract class AbstractUIScreen implements Screen {
 
     @Override
     public void show() {
-        skin = new Skin(Gdx.files.internal("ui/glassy-ui.json"));
+        skin = UIAssets.glassySkin;
         stage = new Stage(new ScreenViewport());
         rootTable = new Table();
         rootTable.setFillParent(true);

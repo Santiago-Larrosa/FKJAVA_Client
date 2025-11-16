@@ -51,6 +51,8 @@ public class UpgradeWindow extends Window {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.client.sendMessage("UPGRADE_DAMAGE");
+                game.client.sendMessage("CLOSE_UPGRADE_WINDOW");
+                closeAction.run();
             }
         });
 
@@ -58,7 +60,9 @@ public class UpgradeWindow extends Window {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.client.sendMessage("UPGRADE_HEALTH");
-            }
+                game.client.sendMessage("CLOSE_UPGRADE_WINDOW");
+                closeAction.run();
+             }
         });
 
         backButton.addListener(new ClickListener() {
@@ -115,22 +119,8 @@ public class UpgradeWindow extends Window {
         );
     }
 
-    public void updateUIFromNetwork(int coins, int dmgLvl, int hpLvl, int dmgCost, int hpCost) {
-    coinLabel.setText("Monedas: " + coins);
-
-    String damageText = "Mejorar Daño (Nivel " + dmgLvl +
-                        ") - Costo: " + dmgCost;
-    damageButton.setText(damageText);
-    damageButton.setDisabled(coins < dmgCost);
-
-    String healthText = "Mejorar Vida (Nivel " + hpLvl +
-                        ") - Costo: " + hpCost;
-    healthButton.setText(healthText);
-    healthButton.setDisabled(coins < hpCost);
-}
 
 public void resize(int width, int height) {
-    // Recentrar la ventana al cambiar la resolución
     setPosition(
         (width - getWidth()) / 2f,
         (height - getHeight()) / 2f

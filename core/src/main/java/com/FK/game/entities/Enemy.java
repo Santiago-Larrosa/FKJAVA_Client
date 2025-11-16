@@ -10,8 +10,7 @@ import com.FK.game.animations.*;
 import com.FK.game.core.*;
 import com.FK.game.states.*;
 
-public abstract class Enemy extends CharacterEntity<Enemy> {
-    protected AnimationHandler[] animations;
+public abstract class Enemy<T extends Enemy<T>> extends CharacterEntity<T> {
     protected EnemyAnimationType currentAnimationType;
     protected AnimationHandler currentAnimation;
     protected float speed = 100f;
@@ -37,18 +36,11 @@ public abstract class Enemy extends CharacterEntity<Enemy> {
         return EnemyAnimationType.SMOKE; 
     }
 
-        private void initializeAnimations() {
-        animations = new AnimationHandler[EnemyAnimationType.values().length];
-        AnimationCache cache = AnimationCache.getInstance();
-        
-        for (EnemyAnimationType type : EnemyAnimationType.values()) {
-            animations[type.ordinal()] = cache.createAnimation(type);
-        }
-    }
+
     
     @Override
-    public void update(float delta) {
-        updatePlayerDetection(); 
+    public void update(float delta) { 
+        updatePlayerDetection();
         stateMachine.update(delta);
     }
 
@@ -67,9 +59,11 @@ public abstract class Enemy extends CharacterEntity<Enemy> {
     public void setVisualStateFromServer(String networkState, String networkFacing) {
     }
 
+    public abstract EntityState<T> createDefaultState();
+
     @Override
-    public EntityState<Enemy> getDefaultState() {
-        return new BolbWalkState();
+    public EntityState<T> getDefaultState() {
+        return createDefaultState();
     }
 
   @Override
@@ -136,7 +130,7 @@ public abstract class Enemy extends CharacterEntity<Enemy> {
         }
     }
     
-    public EntityStateMachine<Enemy> getStateMachine() {
+    public EntityStateMachine<T> getStateMachine() {
         return stateMachine;
     }
     

@@ -18,7 +18,6 @@ import com.FK.game.network.*;
 
 public class Portal extends Entity <Portal>{
     private EntityStateMachine<Portal> stateMachine;
-    protected AnimationHandler[] animations;
     protected ObjectsAnimationType currentAnimationType;
 
     public Portal(float x, float y) {
@@ -28,6 +27,7 @@ public class Portal extends Entity <Portal>{
         initializeAnimations();
         setCurrentAnimation(ObjectsAnimationType.PORTAL_RISING);
         this.stateMachine = new EntityStateMachine<>(this, new PortalState());
+        
     }
 
     public EntityStateMachine<Portal> getStateMachine() {
@@ -65,14 +65,7 @@ public class Portal extends Entity <Portal>{
         }
     }
 
-    private void initializeAnimations() {
-        animations = new AnimationHandler[ObjectsAnimationType.values().length];
-        AnimationCache cache = AnimationCache.getInstance();
-        
-        for (ObjectsAnimationType type : ObjectsAnimationType.values()) {
-            animations[type.ordinal()] = cache.createAnimation(type);
-        }
-    }
+    
 
     @Override
     public void render(com.badlogic.gdx.graphics.g2d.Batch batch) {
